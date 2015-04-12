@@ -798,6 +798,32 @@ void drive()
   set_motors(motor_direction, motor_speed_left, motor_speed_right); // Need to cast motorSpeed as controller may force them to be floats.
 }
 
+int pid_motor_control(int motor_num) {
+  int motor_output, error;
+  float kp, ki, kd;
+  uint8_t motor_setpoint;
+  
+  kp = control_data[1];  //proportional multiplier
+  ki = control_data[2];  //integral multiplier
+  kd = control_data[3];  //derivative multiplier
+  
+  //first, get the setpoint for the desired motor
+  if(motor_num == 0) {
+    motor_setpoint = motor_left;
+  } else {
+    motor_setpoint = motor_right;
+  }
+  
+  //now, calculate the error between the setpoint and the current speed
+  error = motor_setpoint * 2 - abs(encoder_data[motor_num]);
+  
+  //next, calculate the desired speed for the motor
+  motor_output = 16 * (error * kp);
+  
+  return motor_output;
+  
+}
+
 
 void encoder_message() // Publish encoder data on ROS. Must run after drive.
 {

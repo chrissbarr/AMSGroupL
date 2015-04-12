@@ -34,13 +34,13 @@ The system will be evaluated on how accurately it can localise a sound source, h
 
 #Group Members
 *	Chris Barr
+  * SLAM
+  * IR Temp
 *	Bobby Nansel
+  *	Sound Detection and Localisation
 *	Eric Lai
+  *	Close-Range Object Avoidance
+  *	Dead Reckoning (Motor Encoders + IMU)
 *	Premkumar Katti
-
-#Allocated Roles
-*	Sound Detection and Localisation – Bobby
-*	SLAM & IR Temp – Chris
-*	Close-Range Object Avoidance & Localisation (Motor Encoders + IMU) - Eric
-*	Navigation / Path Planning - Prem
-
+  *	Navigation
+  *	Path Planning

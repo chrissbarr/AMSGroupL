@@ -1,6 +1,3 @@
-#AMS Group L
-Repository for Group L's Autonomous Mechatronic Systems robotics project.
-
 #Aim
 The aim of our project is to design a robot that will demonstrate capabilities useful for search and rescue and emergency response operations. Our intended design will be capable of navigating and mapping a largely unknown environment, detecting and localising sound-emitting objects or persons, and determining a person’s status based on observed body temperature, detected sounds (as of breathing, talking, cries for help) and any observed motion using the on-board camera.
 
@@ -24,10 +21,16 @@ Our system will use a LIDAR unit for localisation and environmental mapping (SLA
 *	Able to localise multiple impulse sound sources within a 10m radius to within +/- 50cm accuracy, in robot-centric coordinates (as in finding preplaced sonic beacons). In a multi-robot scenario, such beacons will notionally have been placed by a previous "pathfinder" robot, which we will simulate by manual placement of beacons.
 *	Able to traverse the perimeter of a detected object (e.g. Lumelski-class algorithms) while maintaining a fixed distance from the perimeter within +/- 5%.
 *	Able to determine (with 75% accuracy) whether or not the object of interest is a living person.
+
 ##Extension Requirements
 *	Able to successfully image the object of interest with 75% certainty that the correct object is the subject.
 *	Able to detect the motion of nearby objects in front of the platform (for objects > 10cm moving at > 0.1 m/s). This is simply detecting whether or not there is motion, not the properties of that motion.
 *	Capable of selecting station points around an object of interest (ranging from the size of the robot to the size of a prone person) for the purposes of achieving efficient imaging coverage (with overlap between successive images of 10% +/- TBD) at a distance from the object dependent on the given cameras FOV.
+
+#Test Method
+The proposed system will be required to navigate a test space consisting of unknown stationary obstacles, sporadic-sound sources both at temperatures in the defined human body-temperature range (simulated by an actual person), and at other temperatures outside this range (simulated by a radio or similar sound emitting object). 
+
+The system will be evaluated on how accurately it can localise a sound source, how successfully it can navigate the unknown environment towards that sound source, and how effective its ability to differentiate between survivor candidates and other sound sources.
 
 #Group Members
 *	Chris Barr
@@ -41,7 +44,3 @@ Our system will use a LIDAR unit for localisation and environmental mapping (SLA
 *	Close-Range Object Avoidance & Localisation (Motor Encoders + IMU) - Eric
 *	Navigation / Path Planning - Prem
 
-#Test Method
-The proposed system will be required to navigate a test space consisting of unknown stationary obstacles, sporadic-sound sources both at temperatures in the defined human body-temperature range (simulated by an actual person), and at other temperatures outside this range (simulated by a radio or similar sound emitting object). 
-
-The system will be evaluated on how accurately it can localise a sound source, how successfully it can navigate the unknown environment towards that sound source, and how effective its ability to differentiate between survivor candidates and other sound sources.

@@ -159,6 +159,7 @@ int motor_speed_left = 0; // Motor speed reference.
 int motor_speed_right = 0;
 float control_data[5] = {0.0, 0.0, 0.0, 0.0, 0.0}; // Motor control values (on?, Proportional, Integral, Derivative, Encoders High Speed).
 // Put in motor controller variables here.
+int error_sum[2] = {0, 0};
 
 
 // ------------------------ Battery values specific section ------------------------
@@ -745,11 +746,11 @@ void drive()
   {
     // Left motor speed control goes here.
     // Without code here the motor will not turn if the controller is turned on.
-    
-    
+    motor_speed_left = pid_motor_control(0);
+    /*
     int error = motor_left * 2 - abs(encoder_data[0]);
     motor_speed_left = 16 * (error * 1);
-
+    */
   }
   else
   {
@@ -759,6 +760,7 @@ void drive()
   if (motor_speed_left < 0 || motor_left <= 0) // These conditions set the speed within allowable range.
   {
     motor_speed_left = 0;
+    error_sum[0] = 0;
     // TIP: reset intergral error to 0 here in order to reduce intergrator windup.
   }
   else if (motor_speed_left > 4000 || motor_left >= 255) // Make sure not to exceed allowable maximum speed.
@@ -772,6 +774,7 @@ void drive()
 
   if (control_data[0] == 1) // Right motor.
   {
+    motor_speed_right = pid_motor_control(1);
     // Right motor speed control goes here.
     // Without code here the motor will not turn if the controller is turned on.
   }
@@ -783,6 +786,7 @@ void drive()
   if (motor_speed_right < 0 || motor_right <= 0) // These conditions set the speed within allowable range.
   {
     motor_speed_right = 0;
+    error_sum[1] = 0;
     // TIP: reset intergral error to 0 here in order to reduce intergrator windup.
   }
   else if (motor_speed_right > 4000 || motor_right >= 255) // Make sure not to exceed allowable maximum speed.
@@ -815,10 +819,12 @@ int pid_motor_control(int motor_num) {
   }
   
   //now, calculate the error between the setpoint and the current speed
-  error = motor_setpoint * 2 - abs(encoder_data[motor_num]);
+  error = motor_setpoint - abs(encoder_data[motor_num]);
+  
+  error_sum[motor_num] += error;
   
   //next, calculate the desired speed for the motor
-  motor_output = 16 * (error * kp);
+  motor_output = 16 * ((error * kp) + (error_sum[motor_num] * ki));
   
   return motor_output;
   

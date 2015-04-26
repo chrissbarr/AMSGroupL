@@ -1054,8 +1054,7 @@ void motor_publish() // Publish commands sent to the motor controller via ROS.
 {
   motor_msg[0] = motor_direction;
   motor_msg[1] = motor_speed_left;
-  motor_msg[2] = motor_left;
-  //motor_msg[2] = motor_speed_right;
+  motor_msg[2] = motor_speed_right;
   ROS_motor_msg.data_length = 3;
   ROS_motor_msg.data = motor_msg;
   motor_publisher.publish(&ROS_motor_msg);

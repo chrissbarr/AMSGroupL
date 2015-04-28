@@ -8,20 +8,21 @@ import rospy
 import std_msgs.msg
 
 # define settings
-WheelDiameter = 0.10
-DistancePerCount = (3.14159 *  WheelDiameter) / 64
+WheelDiameter = 100	# wheel diameter in mm
+WheelBase = 220		# distance between wheels in mm
+DistancePerCount = (3.14159 *  WheelDiameter) / (64 * 1000) # mm / encoder tick
 
 _PreviousLeftEncoderCounts = 0
 _PreviousRightEncoderCounts = 0
 last_time_encoder = 0
 
-x = 0
-y = 0
-th = 0
+x = 0	# x coordinate in mm
+y = 0	# y coordinate in mm
+th = 0	# rotation in radians
 
-vx = 0
-vy = 0
-vth = 0
+vx = 0	# instantaneous x velocity
+vy = 0	# instantaneous y velocity
+vth = 0	# instantaneous angular velocity
 
 delta_left = 0
 delta_right = 0
@@ -34,6 +35,8 @@ def wheel_callback(left_encoder, right_encoder):
 	
 	vx = delta_left * DistancePerCount
 	vy = delta_right * DistancePerCount
+	
+	vth = (left_encoder - right_encoder) / WheelBase
 	
 	_PreviousLeftEncoderCounts = left_encoder
 	_PreviousRightEncoderCounts = right_encoder
@@ -62,6 +65,15 @@ def main():
 		delta_x = (vx * cos(th) - vy * sin(th)) * dt)
 		delta_y = (vx * sin(th) + vy * cos(th)) * dt)
 		delta_th = vth * dt
+		
+		x += delta_x
+		y += delta_y
+		th += delta_th
+		
+		# create quaternion
+		
+		
+		
 		rate.sleep()
 	
 	

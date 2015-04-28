@@ -6,6 +6,8 @@ import time
 # ROS libraries
 import rospy
 import std_msgs.msg
+from nav_msgs.msg import Odometry
+from geometry_msgs.msg import Point, Quaternion
 
 # define settings
 WheelDiameter = 100	# wheel diameter in mm
@@ -28,7 +30,7 @@ delta_left = 0
 delta_right = 0
 
 def wheel_callback(left_encoder, right_encoder):
-	current_time_encoder = time.time()
+	current_time_encoder = rospy.Time.now()
 	
 	delta_left = left_encoder - _PreviousLeftEncoderCounts
 	delta_right = right_encoder - _PreviousRightEncoderCounts
@@ -46,19 +48,23 @@ def wheel_callback(left_encoder, right_encoder):
 
 def main():
 	# setup publishing odometry messages
-	pub = rospy.Publisher('odom')
+	odom_pub = rospy.Publisher('odom', Odometry)
 	rospy.init_node('odom_publisher',anonymous=True)
+	odom_broadcaster = tf.TransformBroadcaster()
+	
+	frame_id = '/odom'
+  	child_frame_id = '/base_footprint'
 	
 	# subscribe to wheel encoder messages
 	encoder_ros_update = rospy.Subscriber("/%s/get/encoder_status" % socket.gethostname(), std_msg.Int32MultiArray, wheel_callback)
 	
-	current_time = time.time()
-	last_time = time.time()
+	current_time = rospy.Time.now()
+	last_time = rospy.Time.now()
 	
 	rate = rospy.Rate(1)
 	
 	while not rospy.is_shutdown():
-		current_time = time.time()
+		current_time = rospy.Time.now()
 		
 		# compute odometry
 		dt = (current_time - last_time) / 1000	# time difference in seconds
@@ -70,13 +76,26 @@ def main():
 		y += delta_y
 		th += delta_th
 		
+		msg = Odometry()
+		
+		msg.header.stamp = rospy.Time.now()
+      		msg.header.frame_id = self.frame_id # i.e. '/odom'
+		msg.child_frame_id = self.child_frame_id # i.e. '/base_footprint'
+		
 		# create quaternion
+		q = tf.transformations.quaternion_from_euler(0, 0, th)
 		
+		msg.pose.pose.position = Point(x, y, 0)
+		msg.pose.pose.orientation = q
 		
+		msg.pose.twist.linear.x = vx
+		msg.pose.twist.linear.y = vy
+		msg.pose.twist.angular.z = vth
 		
+		odom_pub.publish(msg)
+
+		last_time = current_time
 		rate.sleep()
-	
-	
 	
 if __name__=='__main__':
 	try:

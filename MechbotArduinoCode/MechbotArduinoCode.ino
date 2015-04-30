@@ -385,6 +385,9 @@ std_msgs::Float32MultiArray US_msg; // ROS message variable for US data.
 
 // ------------------------ IR Temperature specific section ------------------------
 
+//#define IR_TEMP_ENABLED
+
+#ifdef IR_TEMP_ENABLED
 static const byte PIN_DATA    = 2; // Choose any pins you like for these
 static const byte PIN_CLOCK   = 3;
 static const byte PIN_ACQUIRE = 4;
@@ -399,6 +402,8 @@ const String IR_TEMP_STATUS_TOPIC_STRING = ROBOT_IDENTIFIER + GETTER_IDENTIFIER 
 const char * IR_TEMP_STATUS_TOPIC = IR_TEMP_STATUS_TOPIC_STRING.c_str();
 
 std_msgs::Float32MultiArray IR_T_msg; // ROS message variable for IR Temp data.
+
+#endif
 
 //////////////////////////////////////////////////////////////////////////////////////////
 // 3. Function prototypes.
@@ -446,8 +451,9 @@ ros::Publisher LCD_publisher(LCD_STATUS_TOPIC, &LCD_msg);
 ros::Publisher motor_publisher(MOTOR_STATUS_TOPIC, &ROS_motor_msg);
 ros::Publisher time_publisher(TIME_STATUS_TOPIC, &time_msg);
 ros::Publisher US_publisher(ULTRASONIC_STATUS_TOPIC, &US_msg);
+#ifdef IR_TEMP_ENABLED
 ros::Publisher IR_T_publisher(IR_TEMP_STATUS_TOPIC, &IR_T_msg);
-
+#endif
 
 //////////////////////////////////////////////////////////////////////////////////////////
 // 5. Subscriber callbacks.
@@ -642,7 +648,10 @@ void setup() // This subroutine runs once at start-up and initialises the system
   node_handle.advertise(motor_publisher);
   node_handle.advertise(time_publisher);
   node_handle.advertise(US_publisher);
+  
+  #ifdef IR_TEMP_ENABLED
   node_handle.advertise(IR_T_publisher);
+  #endif
 
   print_bottom_LCD_line("RESETTING US"); // Write to LCD describing operation.
 
@@ -961,15 +970,19 @@ void US_message()
 }
 
 void IR_temp_get() {
+  #ifdef IR_TEMP_ENABLED
   IR_T_data[0] = irTemp.getAmbientTemperature(SCALE);
   IR_T_data[1] = irTemp.getIRTemperature(SCALE);
+  #endif
 }
 
 void IR_temp_publish() {
+  #ifdef IR_TEMP_ENABLED
   IR_T_msg.data_length = 2;
   IR_T_msg.data = IR_T_data;
-  
+    
   IR_T_publisher.publish(&IR_T_msg); // Publish IR_T values on ROS network.
+  #endif
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////

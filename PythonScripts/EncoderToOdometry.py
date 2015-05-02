@@ -17,7 +17,7 @@ from std_msgs.msg import *
 
 
 # define settings
-WheelDiameter = 100	# wheel diameter in mm
+WheelDiameter = 80	# wheel diameter in mm
 WheelBase = 220		# distance between wheels in mm
 DistancePerCount = (3.14159 *  WheelDiameter) / (64) # mm / encoder tick
 
@@ -42,8 +42,7 @@ odom_pub = rospy.Publisher('odom', Odometry, queue_size=10)
 rospy.init_node('odom_publisher',anonymous=True)
 odom_broadcaster = tf.TransformBroadcaster()
 
-frame_id = '/odom'
-child_frame_id = '/base_footprint'
+last_time_odom = 0
 
 
 def wheel_callback(data):
@@ -81,10 +80,15 @@ def wheel_callback(data):
 	return
 
 def publish_odometry():
-	global x, y, th, last_time, current_time
+	global x, y, th, vth, last_time_odom
+
+	if(last_time_odom == 0):
+		last_time_odom = time.time()
+
+	current_time_odom = time.time()
 	
 	# compute odometry
-	dt = (current_time - last_time) / 1000	# time difference in seconds
+	dt = (current_time_odom - last_time_odom) / 1000	# time difference in seconds
 	delta_x = (vx * math.cos(th) - vy * math.sin(th)) * dt
 	delta_y = (vx * math.sin(th) + vy * math.cos(th)) * dt
 	delta_th = vth * dt
@@ -94,12 +98,11 @@ def publish_odometry():
 	y += delta_y
 	th += delta_th
 
-	print('X: %d Y: %d Theta: %d') % (x, y, th)
+	print('X: %.3f Y: %.3f Theta: %.3f') % (x, y, th)
 	
 	msg = Odometry()
 	msg.header.stamp = rospy.Time.now()
-	msg.header.frame_id = '/odom'
-	msg.child_frame_id = '/base_footprint'
+	msg.header.frame_id = 'world'
 	
 	# create quaternion
 	q = tf.transformations.quaternion_from_euler(0, 0, th)
@@ -115,6 +118,8 @@ def publish_odometry():
 	#msg.twist.twist.angular.z = vth
 
 	odom_pub.publish(msg)
+
+	last_time_odom = current_time_odom
 
 
 def main():

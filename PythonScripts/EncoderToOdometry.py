@@ -17,17 +17,17 @@ from std_msgs.msg import *
 
 
 # define settings
-WheelDiameter = 80	# wheel diameter in mm
-WheelBase = 220		# distance between wheels in mm
-DistancePerCount = (3.14159 *  WheelDiameter) / (64) # mm / encoder tick
+WheelDiameter = 45.0	# wheel diameter in mm
+WheelBase = 225.0		# distance between wheels in mm
+DistancePerCount = (3.14159 *  WheelDiameter) / (3200) # mm / encoder tick
 
-x = 0	# x coordinate in mm
-y = 0	# y coordinate in mm
-th = 0	# rotation in radians
+x = 0.0	# x coordinate in mm
+y = 0.0	# y coordinate in mm
+th = 0.0	# rotation in radians
 
-vx = 0	# instantaneous x velocity
-vy = 0	# instantaneous y velocity
-vth = 0	# instantaneous angular velocity
+vx = 0.0	# instantaneous x velocity
+vy = 0.0	# instantaneous y velocity
+vth = 0.0	# instantaneous angular velocity
 
 _PreviousLeftEncoderCounts = 0
 _PreviousRightEncoderCounts = 0
@@ -51,7 +51,7 @@ def wheel_callback(data):
 	left_encoder = data.data[2]
 	right_encoder = data.data[3]
 
-	global delta_left, delta_right, vx, by, vth, _PreviousLeftEncoderCounts, _PreviousRightEncoderCounts, last_time
+	global delta_left, delta_right, _PreviousLeftEncoderCounts, _PreviousRightEncoderCounts, last_time
 	
 	#calculate the change in encoder values since last message received
 	delta_left = left_encoder - _PreviousLeftEncoderCounts
@@ -62,13 +62,13 @@ def wheel_callback(data):
 	vy = delta_right * DistancePerCount
 	
 	#find angular velocity from relative wheel speeds
-	vth = (delta_left - delta_right) / WheelBase
+	vth = -(delta_left - delta_right) / WheelBase
 
 	print('Wheel callback! LE: %d RE: %d DL: %d DR: %d vx: %.3f vy: %.3f vth: %.3f') % (left_encoder, right_encoder, delta_left, delta_right, vx, vy, vth)
 	
 
 	#publish calculated values to odometry topic
-	publish_odometry()
+	publish_odometry(vx, vy, vth)
 
 	#save current values for next time
 	_PreviousLeftEncoderCounts = left_encoder
@@ -79,8 +79,8 @@ def wheel_callback(data):
 	
 	return
 
-def publish_odometry():
-	global x, y, th, vth, last_time_odom
+def publish_odometry(vx, vy, vth):
+	global x, y, th, last_time_odom
 
 	if(last_time_odom == 0):
 		last_time_odom = time.time()
@@ -88,7 +88,7 @@ def publish_odometry():
 	current_time_odom = time.time()
 	
 	# compute odometry
-	dt = (current_time_odom - last_time_odom) / 1000	# time difference in seconds
+	dt = (current_time_odom - last_time_odom)# / 1000	# time difference in seconds
 	delta_x = (vx * math.cos(th) - vy * math.sin(th)) * dt
 	delta_y = (vx * math.sin(th) + vy * math.cos(th)) * dt
 	delta_th = vth * dt
@@ -107,7 +107,7 @@ def publish_odometry():
 	# create quaternion
 	q = tf.transformations.quaternion_from_euler(0, 0, th)
 	
-	msg.pose.pose.position = Point(x, y, 0)
+	msg.pose.pose.position = Point(x/1000, y/1000, 0)
 	msg.pose.pose.orientation.x = q[0]
 	msg.pose.pose.orientation.y = q[1]
 	msg.pose.pose.orientation.z = q[2]

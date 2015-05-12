@@ -19,7 +19,7 @@ from geometry_msgs.msg import Point, Quaternion, PoseStamped
 
 threshold = 0.1
 rot_threshold = 0.2
-moving = false
+moving = False
 
 #current pose variables
 x = 0

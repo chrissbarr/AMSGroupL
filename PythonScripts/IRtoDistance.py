@@ -28,15 +28,17 @@ def subscriber():
     
 def ir_update(data):
   
-    sensor1 = data.data[0]
-    sensor2 = data.data[1]
-    sensor3 = data.data[2]
-    sensor4 = data.data[3]
+    sensor1 = ir_to_mm(data.data[0])
+    sensor2 = ir_to_mm(data.data[1])
+    sensor3 = ir_to_mm(data.data[2])
+    sensor4 = ir_to_mm(data.data[3])
     
     print("Sensor1: %.3f Sensor2: %.3f Sensor3: %.3f Sensor4: %.3f") % (sensor1, sensor2, sensor3, sensor4)
 
 def ir_to_mm(analog_value):
-    distance_in_mm = 
+    distance_in_mm = 106777 * analog_value ^ (-1.242)
+
+    return distance_in_mm
   
     
 def main():

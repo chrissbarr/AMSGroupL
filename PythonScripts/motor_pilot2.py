@@ -17,9 +17,9 @@ import rospy
 import std_msgs.msg
 from geometry_msgs.msg import Point, Quaternion, PoseStamped
 
-threshold = 0.1
-rot_threshold = 0.2
-moving = False
+threshold = 0.1 # units are in metres, reached target if x & y within 0.1 = 10cm of target position
+rot_threshold = 0.2	# angle in radians, consider heading correct if within this number of radians to target point
+moving = False	# tracks if we are currently moving towards the target point
 
 #current pose variables
 x = 0

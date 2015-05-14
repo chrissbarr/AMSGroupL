@@ -11,14 +11,14 @@ import socket
 # ROS
 import rospy
 import std_msgs.msg
-from geometry_msgs.msg import Point, Quaternion, PoseStamped
+from geometry_msgs.msg import Point, Quaternion, Pose
 import tf
 
 rospy.init_node("send_desired_pose", anonymous=False) # name the script on the ROS network
 
 
 # setup publishing pose messages
-pose_pub = rospy.Publisher('pose', Pose, queue_size=10)
+pose_pub = rospy.Publisher('desiredPose', Pose, queue_size=10)
 odom_broadcaster = tf.TransformBroadcaster()
 
 # main program
@@ -30,14 +30,13 @@ def main(argv):
 
     print("x: %.3f  y: %.3f  Th: %.1f") % (x, y, th) # print 2D pose data to terminal
 	
+    time.sleep(0.5)
     #publish pose data to ros topic
     msg = Pose()
 
-    msg.header.frame_id = 'world'
-
     q = tf.transformations.quaternion_from_euler(0, 0, th)
 
-    msg.pose.position = Point(x,y,0)
+    msg.position = Point(x,y,0)
 
     msg.orientation.x = q[0]
     msg.orientation.y = q[1]
@@ -45,7 +44,12 @@ def main(argv):
     msg.orientation.w = q[3]
 
     pose_pub.publish(msg)
-
+    
+    key_pressed = False
+    while key_pressed == False:
+         key_pressed = select.select([sys.stdin], [], [], 0) == ([sys.stdin], [], []) # is key pressed?
+         time.sleep(0.5)
+         
     sys.exit()
 
 

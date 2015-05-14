@@ -13,6 +13,9 @@ import os
 import rospy
 import std_msgs.msg
 
+min_distance = 120
+max_distance = 500
+
 sensor1 = 0
 sensor2 = 0
 sensor3 = 0
@@ -33,8 +36,7 @@ def subscriber():
     
 def ir_update(data):
   
-	start_time = time.time()
-	
+    start_time = time.time()
     sensor1 = ir_to_mm(data.data[0],1)
     sensor2 = ir_to_mm(data.data[1],2)
     sensor3 = ir_to_mm(data.data[2],3)
@@ -42,13 +44,20 @@ def ir_update(data):
     
     time_taken = time.time() - start_time
     
-    print("Sensor1: %.3f Sensor2: %.3f Sensor3: %.3f Sensor4: %.3f | Time Taken: ") % (sensor1, sensor2, sensor3, sensor4, time_taken)
+    print("Sensor1: %.3f Sensor2: %.3f Sensor3: %.3f Sensor4: %.3f | Time Taken: %.3f") % (sensor1, sensor2, sensor3, sensor4, time_taken)
 
 def ir_to_mm(analog_value, sensor_num):
-	# arrays are 0 indexed, but sensor_num is setup for readability (1-4 for sensors)
-	array_index = sensor_num-1
-	#calculate distance according to each sensors profile
+    # arrays are 0 indexed, but sensor_num is setup for readability (1-4 for sensors)
+    array_index = sensor_num-1
+    #calculate distance according to each sensors profile
     distance_in_mm = sensor_equation_multiplier[array_index] * pow(analog_value,sensor_equation_exponent[array_index])
+    #distance_in_mm = 118514 * pow(analog_value,-1.252)
+    
+    if(distance_in_mm<min_distance):
+        distance_in_mm = max_distance
+    if(distance_in_mm>max_distance):
+        distance_in_mm=max_distance
+        
     return distance_in_mm
     
 def main():

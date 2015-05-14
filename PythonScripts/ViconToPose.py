@@ -23,7 +23,7 @@ rospy.init_node("vicon_to_pose", anonymous=False) # name the script on the ROS n
 
 
 # setup publishing pose messages
-pose_pub = rospy.Publisher('poseStamped', PoseStamped, queue_size=10)
+pose_pub = rospy.Publisher('currentPose', PoseStamped, queue_size=10)
 odom_broadcaster = tf.TransformBroadcaster()
 
 # subroutines

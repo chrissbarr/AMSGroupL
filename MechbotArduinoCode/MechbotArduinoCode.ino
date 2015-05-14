@@ -163,6 +163,13 @@ float control_data[5] = {0.0, 0.0, 0.0, 0.0, 0.0}; // Motor control values (on?,
 // Put in motor controller variables here.
 int error_sum[2] = {0, 0};
 
+#define PID_HARDCODED //if defined, PID values will be locked to the below values:
+#ifdef PID_HARDCODED
+float p = 2;
+float i = 0.5;
+float d = 0.1;
+#endif
+
 
 // ------------------------ Battery values specific section ------------------------
 
@@ -839,9 +846,17 @@ int pid_motor_control(int motor_num) {
   float kp, ki, kd;
   uint8_t motor_setpoint;
   
+  
   kp = control_data[1];  //proportional multiplier
   ki = control_data[2];  //integral multiplier
   kd = control_data[3];  //derivative multiplier
+  
+  //if we've hardcoded values in, use those instead
+  #ifdef PID_HARDCODED
+  kp = p;
+  ki = i;
+  kd = d;
+  #endif
   
   //first, get the setpoint for the desired motor
   if(motor_num == 0) {

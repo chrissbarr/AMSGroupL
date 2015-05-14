@@ -21,6 +21,8 @@ import tf
 
 threshold = 0.1 # units are in metres, reached target if x & y within 0.1 = 10cm of target position
 rot_threshold = 0.1	# angle in radians, consider heading correct if within this number of radians to target point
+travel_heading_error_window = 0.5 # If angle to target > this during travel, robot will stop and reorient
+base_speed = 50
 
 #current pose variables
 x = 0
@@ -91,6 +93,27 @@ def coordinates_reached():
 	if(math.fabs(d_x-x) < threshold and math.fabs(d_y-y) < threshold):
 		reached = True
 	return reached
+	
+#calculates difference between two angles
+def angular_difference(angle1, angle2):
+	#return math.atan2(math.sin(angle1 - angle2), math.cos(angle1 - angle2)) #original, seemed to work
+	# find the raw angular difference
+	diff = angle1 - angle2
+	
+	#make sure it's the shortest distance around 0 etc
+	diff = (diff + 180) % 360 - 180
+		
+	return diff	
+
+def angle_between_points(x1, y1, x2, y2):
+	dx = x1 - x2
+	dy = y1 - y2
+	
+	heading = math.atan2(-dy,-dy)
+	
+	#heading %= 2*math.pi
+	
+	return heading
 
 def main(argv):
 	global x, y, th, d_x, d_y, d_th
@@ -98,9 +121,16 @@ def main(argv):
 	moving = False	# tracks if we are currently moving towards the target point
 
 	#rotation PID
-	rot_P = 20.0
+	rot_P = 10.0
 	rot_I = 0.0
 	rot_D = 0.0
+	rot_error_sum = 0
+	
+	#driving angle PID
+	driving_P = 5.0
+	driving_I = 0.0
+	driving_D = 0.0
+	driving_error_sum = 0
 	
 	(current_pose_update, desired_pose_update) = pose_subscriber()
 	
@@ -108,21 +138,17 @@ def main(argv):
 	
 	while key_pressed == False:
 		loop_start = time.time() # get loop time at start for loop rate calculations
-		print("Main loop beginning...")
-		print("Current Position: %.3f %.3f %.3f | Target Position: %.3f %.3f %.3f") % (x,y,th,d_x,d_y,d_th)
+		
+		# calculate angular difference
+		target_heading = angle_between_points(x,y,d_x,d_y)
+		heading_error = angular_difference(target_heading,th)
+		
+		print("Current Position: %.3f %.3f %.3f | Target Position: %.3f %.3f %.3f | Heading Error: %.3f") % (x,y,th,d_x,d_y,d_th,heading_error)
+				
 		if(coordinates_reached() == False):
-			print("Coordinates not reached...")
 			if(moving == False):
-				print("Not currently moving...")
-				# calculate angular difference
-				dx = x - d_x
-				dy = y - d_y
-				target_angle = math.atan2(-dy,-dx)
-				target_angle  %= 2*math.pi
-				angular_difference = math.atan2(math.sin(target_angle - th), math.cos(target_angle - th))
-				print("%.3f radians off target")  % (angular_difference)
-				if(math.fabs(angular_difference) < rot_threshold):
-					print("Heading achieved!")
+				if(math.fabs(heading_error) < rot_threshold):
+					print("Heading achieved! Beginning move towards target!")
 					# we're facing the right way, so stop and drive straight!
 					# first, stop motors
 					publish_motor_command(1,0,0)
@@ -131,23 +157,41 @@ def main(argv):
 					# drive straight
 					publish_motor_command(0,50,50)
 					moving = True
+					
+					rot_error_sum = 0 #reset PID integrator
+					
 					time.sleep(1) # make sure message has time to be enacted
 				else:
-					print("Turning to face heading... ")
+					print("Orienting towards target...")
 					#rotate to face heading
 					# start motors moving based on angular difference
-					motor_speed = int(round(rot_P * math.fabs(angular_difference)))
+					motor_speed = int(round(rot_P * math.fabs(heading_error) + rot_I * rot_error_sum))
+					rot_error_sum += heading_error
 
-					if(angular_difference > 0):
+					if(heading_error > 0):
 						rot = 3
-					else:
+					if(heading_error < 0):
 						rot = 2
+						
 					publish_motor_command(rot,motor_speed,motor_speed)
+			else:
+				#if we are moving but coordinates aren't reached...
+				if(heading_error > travel_heading_error_window):
+					# if we're off course by too much, stop and re-orientate towards target
+					publish_motor_command(0,0,0)
+					moving = False
+					# loop should take over and make things work now we're stopped away from the target
+				else:
+					#adjust motors to aim towards target point
+					motor_left_speed = base_speed + (heading_error * driving_P + driving_error_sum * driving_I)
+					motor_left_right = base_speed - (heading_error * driving_P + driving_error_sum * driving_I)
+					driving_error_sum += heading_error
 		else:
 			print("Coordinates reached!")
 			if(moving == True):
-				publish_motor_command(1,0,0)
+				publish_motor_command(0,0,0)
 				moving = False
+				driving_error_sum = 0
 				print("Motors stopped!")
 	
 		loop_sleep = delay - (time.time() - loop_start) # if loop delay too low then will print data faster than updates are recieved

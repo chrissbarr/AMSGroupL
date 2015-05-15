@@ -197,7 +197,8 @@ int cell_voltage = 0; // Variable holding the minimum cell voltage from the batt
 float battery_data[2]; // Current set up for 2 battery values (battery capacity, current draw), can be changed.
 float battery_level = 0; // Last displayed battery level.
 // Can put variables for battery capacity filter and/or display timing here.
-
+float battery_max_mv = 4200
+float battery_min_mv = 3600
 std_msgs::Float32MultiArray battery_msg; // ROS message variable for battery and power data.
 
 
@@ -753,7 +754,7 @@ void battery_message() // Need to convert raw values into useful units.
   battery_data[0] = get_bytes_from_n(BMS_msg, 1); // Get signal from battery management system and put in battery data for transmission over ROS.
 
   // Put model for converting PWM signal from battery management system into battery capacity here.
-
+  battery_data[0] = map(battery_data[0],battery_min_mv,battery_max_mv,0,100);
   // Find current usage
   send_command(BMS_ADDRESS, SYS_CURRENT, 0); // Request current usage.
   delay(1); // Wait for battery management system to respond.

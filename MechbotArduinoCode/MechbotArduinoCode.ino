@@ -198,7 +198,7 @@ float battery_data[2]; // Current set up for 2 battery values (battery capacity,
 float battery_level = 0; // Last displayed battery level.
 // Can put variables for battery capacity filter and/or display timing here.
 float battery_max_mv = 4200;
-float battery_min_mv = 3200;
+float battery_min_mv = 3400;
 std_msgs::Float32MultiArray battery_msg; // ROS message variable for battery and power data.
 
 

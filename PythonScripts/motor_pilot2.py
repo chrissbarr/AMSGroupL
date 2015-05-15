@@ -19,10 +19,10 @@ import std_msgs.msg
 from geometry_msgs.msg import Point, Quaternion, PoseStamped, Pose
 import tf
 
-threshold = 0.1 # units are in metres, reached target if x & y within 0.1 = 10cm of target position
+threshold = .01 #0.1 # units are in metres, reached target if x & y within 0.1 = 10cm of target position
 rot_threshold = 0.1	# angle in radians, consider heading correct if within this number of radians to target point
-travel_heading_error_window = 0.5 # If angle to target > this during travel, robot will stop and reorient
-base_speed = 50
+travel_heading_error_window = math.pi#0.5 # If angle to target > this during travel, robot will stop and reorient
+base_speed = 100
 
 #current pose variables
 x = 0
@@ -30,8 +30,8 @@ y = 0
 th = 0
 
 #desired pose variables
-d_x = 4.87
-d_y = 1.85
+d_x = 6
+d_y = 2
 d_th = 0
 
 delay = 0.2 # update rate for main loop (s)
@@ -101,7 +101,7 @@ def angular_difference(angle1, angle2):
 	diff = angle1 - angle2
 	
 	#make sure it's the shortest distance around 0 etc
-	diff = (diff + 180) % 360 - 180
+	diff = (diff + math.pi) % (2 * math.pi) - math.pi
 		
 	return diff	
 
@@ -109,7 +109,7 @@ def angle_between_points(x1, y1, x2, y2):
 	dx = x1 - x2
 	dy = y1 - y2
 	
-	heading = math.atan2(-dy,-dy)
+	heading = math.atan2(-dy,-dx)
 	
 	#heading %= 2*math.pi
 	
@@ -121,13 +121,13 @@ def main(argv):
 	moving = False	# tracks if we are currently moving towards the target point
 
 	#rotation PID
-	rot_P = 10.0
+	rot_P = 20.0
 	rot_I = 0.0
 	rot_D = 0.0
 	rot_error_sum = 0
 	
 	#driving angle PID
-	driving_P = 5.0
+	driving_P = 20.0
 	driving_I = 0.0
 	driving_D = 0.0
 	driving_error_sum = 0
@@ -136,8 +136,23 @@ def main(argv):
 	
 	key_pressed = False
 	
+	coordinates_array = [[6.5, 2.2], [1,2.2], [1,0.8], [6, 0.8]]
+	num_points = 3
+	index = 0
+	
+	d_x = 1
+	
 	while key_pressed == False:
 		loop_start = time.time() # get loop time at start for loop rate calculations
+		
+		#d_x = coordinates_array[index][0]
+		#d_y = coordinates_array[index][1]
+		
+		d_x += 0.1
+		if(d_x > 6):
+			d_x = 1
+			
+		d_y = math.sin(time.time()/10) + 2
 		
 		# calculate angular difference
 		target_heading = angle_between_points(x,y,d_x,d_y)
@@ -155,7 +170,7 @@ def main(argv):
 					time.sleep(1) # make sure message has time to be enacted
 					
 					# drive straight
-					publish_motor_command(0,50,50)
+					publish_motor_command(0,base_speed,base_speed)
 					moving = True
 					
 					rot_error_sum = 0 #reset PID integrator
@@ -183,9 +198,12 @@ def main(argv):
 					# loop should take over and make things work now we're stopped away from the target
 				else:
 					#adjust motors to aim towards target point
-					motor_left_speed = base_speed + (heading_error * driving_P + driving_error_sum * driving_I)
-					motor_left_right = base_speed - (heading_error * driving_P + driving_error_sum * driving_I)
+					motor_left_speed = base_speed - (heading_error * driving_P + driving_error_sum * driving_I)
+					motor_left_right = base_speed + (heading_error * driving_P + driving_error_sum * driving_I)
 					driving_error_sum += heading_error
+					publish_motor_command(0,motor_left_speed,motor_left_right)
+					#publish_motor_command(0,base_speed,base_speed)
+					
 		else:
 			print("Coordinates reached!")
 			if(moving == True):
@@ -193,6 +211,11 @@ def main(argv):
 				moving = False
 				driving_error_sum = 0
 				print("Motors stopped!")
+				
+				if(index < num_points):
+					index+=1
+				else:
+					index=0
 	
 		loop_sleep = delay - (time.time() - loop_start) # if loop delay too low then will print data faster than updates are recieved
 		if loop_sleep > 0:

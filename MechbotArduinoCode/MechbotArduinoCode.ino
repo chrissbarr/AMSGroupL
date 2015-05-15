@@ -781,6 +781,10 @@ void drive()
   get_encoders(); // Get the encoder values from the motor controller.
   // May need to scale velocity of wheels by actual time taken.
   
+  #ifdef PID_HARDCODED
+  control_data[0]=1;
+  #endif
+  
   if (control_data[0] == 1) // Left motor.
   {
     // Left motor speed control goes here.

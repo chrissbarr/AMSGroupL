@@ -1,7 +1,12 @@
 #!/usr/bin/env python
 
 """
-This program accepts commands to drive the platform and translates them into commands which are sent to the motors.
+This program drives the robot to a given set of coordinates.
+
+It subscribes to the following topics:
+
+- "currentPose", expects PoseStamped messages containing the current pose of the robot.
+- "desiredPose", expects Pose messages containing the desired pose for the robot.
 
 """
 

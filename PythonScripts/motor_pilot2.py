@@ -39,7 +39,7 @@ d_x = 6
 d_y = 2
 d_th = 0
 
-delay = 0.2 # update rate for main loop (s)
+delay = 0.1 # update rate for main loop (s)
 
 rospy.init_node("motor_pilot", anonymous=False) # name the script on the ROS network
 

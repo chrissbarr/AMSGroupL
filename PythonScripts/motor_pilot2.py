@@ -19,10 +19,10 @@ import std_msgs.msg
 from geometry_msgs.msg import Point, Quaternion, PoseStamped, Pose
 import tf
 
-threshold = .01 #0.1 # units are in metres, reached target if x & y within 0.1 = 10cm of target position
+threshold = 0.1 # units are in metres, reached target if x & y within 0.1 = 10cm of target position
 rot_threshold = 0.1	# angle in radians, consider heading correct if within this number of radians to target point
-travel_heading_error_window = math.pi#0.5 # If angle to target > this during travel, robot will stop and reorient
-base_speed = 100
+travel_heading_error_window = 0.5 # If angle to target > this during travel, robot will stop and reorient
+base_speed = 100 # Default speed robot travels at. Left and right motors are biased from this value to adjust steering.
 
 #current pose variables
 x = 0
@@ -42,7 +42,8 @@ pub = rospy.Publisher("/%s/set/motor_drive" % socket.gethostname(), std_msgs.msg
 
 time.sleep(0.2) # make sure publisher setup
 
-def publish_motor_command(md_d, md_l, md_r): # subroutine
+# send a command to the motors (direction, left_speed, right_speed)
+def publish_motor_command(md_d, md_l, md_r):
 	motor_data = std_msgs.msg.UInt8MultiArray() # definitions in std_msgs.msg - data to be published need to be in ROS format
 	motor_data.data = [1,0,0,1]
 	motor_data.data[0] = int(md_d)
@@ -60,33 +61,41 @@ def pose_subscriber():
 def current_pose_update(data):
 	global x, y, th
 
+	# read in position
 	x = data.pose.position.x
 	y = data.pose.position.y
-	#q = data.pose.orientation
 	
+	# read in orientation
 	q = (
 	    data.pose.orientation.x,
 	    data.pose.orientation.y,
 	    data.pose.orientation.z,
 	    data.pose.orientation.w)
-	    
+	
+	# convert orientation from quaternion to euler angles, read yaw
 	euler = tf.transformations.euler_from_quaternion(q)
 	th = euler[2]
 
 def desired_pose_update(data):
 	global d_x, d_y, d_th
 
+	# read in position
 	d_x = data.position.x
 	d_y = data.position.y
+	
+	# read in orientation
 	q = (
 	    data.orientation.x,
 	    data.orientation.y,
 	    data.orientation.z,
 	    data.orientation.w)
 	    
+	# convert orientation from quaternion to euler angles, read yaw
 	euler = tf.transformations.euler_from_quaternion(q)
 	th = euler[2]
 
+# checks if the target coordinates are reached. Returns true if current x/y are near target x/y within set threshold
+# should update to use point distance rather than rectangle area check. Would be more accurate.
 def coordinates_reached():
 	global threshold
 	reached = False
@@ -96,7 +105,6 @@ def coordinates_reached():
 	
 #calculates difference between two angles
 def angular_difference(angle1, angle2):
-	#return math.atan2(math.sin(angle1 - angle2), math.cos(angle1 - angle2)) #original, seemed to work
 	# find the raw angular difference
 	diff = angle1 - angle2
 	
@@ -110,9 +118,7 @@ def angle_between_points(x1, y1, x2, y2):
 	dy = y1 - y2
 	
 	heading = math.atan2(-dy,-dx)
-	
-	#heading %= 2*math.pi
-	
+
 	return heading
 
 def main(argv):
@@ -139,20 +145,12 @@ def main(argv):
 	coordinates_array = [[6.5, 2.2], [1,2.2], [1,0.8], [6, 0.8]]
 	num_points = 3
 	index = 0
-	
-	d_x = 1
-	
+
 	while key_pressed == False:
 		loop_start = time.time() # get loop time at start for loop rate calculations
 		
-		#d_x = coordinates_array[index][0]
-		#d_y = coordinates_array[index][1]
-		
-		d_x += 0.1
-		if(d_x > 6):
-			d_x = 1
-			
-		d_y = math.sin(time.time()/10) + 2
+		d_x = coordinates_array[index][0]
+		d_y = coordinates_array[index][1]
 		
 		# calculate angular difference
 		target_heading = angle_between_points(x,y,d_x,d_y)
@@ -167,7 +165,7 @@ def main(argv):
 					# we're facing the right way, so stop and drive straight!
 					# first, stop motors
 					publish_motor_command(1,0,0)
-					time.sleep(1) # make sure message has time to be enacted
+					time.sleep(0.5) # make sure message has time to be enacted
 					
 					# drive straight
 					publish_motor_command(0,base_speed,base_speed)
@@ -175,7 +173,7 @@ def main(argv):
 					
 					rot_error_sum = 0 #reset PID integrator
 					
-					time.sleep(1) # make sure message has time to be enacted
+					time.sleep(0.5) # make sure message has time to be enacted
 				else:
 					print("Orienting towards target...")
 					#rotate to face heading
@@ -218,8 +216,10 @@ def main(argv):
 					index=0
 	
 		loop_sleep = delay - (time.time() - loop_start) # if loop delay too low then will print data faster than updates are recieved
+		
 		if loop_sleep > 0:
 			time.sleep(loop_sleep)
+		
 		key_pressed = select.select([sys.stdin], [], [], 0) == ([sys.stdin], [], []) # is key pressed?
 	
 	# finally, stop motors

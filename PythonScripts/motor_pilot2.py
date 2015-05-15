@@ -100,11 +100,10 @@ def desired_pose_update(data):
 	th = euler[2]
 
 # checks if the target coordinates are reached. Returns true if current x/y are near target x/y within set threshold
-# should update to use point distance rather than rectangle area check. Would be more accurate.
 def coordinates_reached():
 	global threshold
 	reached = False
-	if(math.fabs(d_x-x) < threshold and math.fabs(d_y-y) < threshold):
+	if(distance_between_points(x,y,d_x,d_y) < threshold):
 		reached = True
 	return reached
 	
@@ -125,6 +124,9 @@ def angle_between_points(x1, y1, x2, y2):
 	heading = math.atan2(-dy,-dx)
 
 	return heading
+	
+def distance_between_points(x1, y1, x2, y2):
+	return math.sqrt((x2 - x1)**2 + (y2 - y1)**2)
 
 def main(argv):
 	global x, y, th, d_x, d_y, d_th

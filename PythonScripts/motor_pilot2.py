@@ -149,6 +149,7 @@ def main(argv):
 	
 	key_pressed = False
 	
+	# variables for waypoint navigator test
 	coordinates_array = [[6.5, 2.2], [1,2.2], [1,0.8], [6, 0.8]]
 	num_points = 3
 	index = 0
@@ -156,6 +157,7 @@ def main(argv):
 	while key_pressed == False:
 		loop_start = time.time() # get loop time at start for loop rate calculations
 		
+		# set current waypoint as navigational target
 		d_x = coordinates_array[index][0]
 		d_y = coordinates_array[index][1]
 		
@@ -217,6 +219,7 @@ def main(argv):
 				driving_error_sum = 0
 				print("Motors stopped!")
 				
+				# loops through waypoints sequentially for test purposes
 				if(index < num_points):
 					index+=1
 				else:

@@ -18,17 +18,33 @@ import socket
 import os
 import math
 
+import numpy as np
+
 # ROS libraries
 import rospy
 import std_msgs.msg
 from geometry_msgs.msg import Point, Quaternion, PoseStamped, Pose
 import tf
 
+
 threshold = 0.1 # units are in metres, reached target if x & y within 0.1 = 10cm of target position
 rot_threshold = 0.1	# angle in radians, consider heading correct if within this number of radians to target point
 travel_heading_error_window = 0.5 # If angle to target > this during travel, robot will stop and reorient
 base_speed = 100 # Default speed robot travels at. Left and right motors are biased from this value to adjust steering.
 
+#rotation settings
+rot_P = 20.0
+rot_I = 0.0
+rot_D = 0.0
+rot_error_sum = 0
+rot_speed_offset = 5
+
+#driving angle PID
+driving_P = 25.0
+driving_I = 0.0
+driving_D = 0.0
+driving_error_sum = 0
+	
 #current pose variables
 x = 0
 y = 0
@@ -127,32 +143,49 @@ def angle_between_points(x1, y1, x2, y2):
 	
 def distance_between_points(x1, y1, x2, y2):
 	return math.sqrt((x2 - x1)**2 + (y2 - y1)**2)
+	
+def turn_to_face(heading_error):
+	global rot_P, rot_speed_offset
+	#rotate to face heading
+	# start motors moving based on angular difference
+	motor_speed = int(round(rot_P * math.fabs(heading_error))) + rot_speed_offset
+	#rot_error_sum += heading_error
+
+	if(heading_error > 0):
+		rot = 3
+	if(heading_error < 0):
+		rot = 2
+						
+	publish_motor_command(rot,motor_speed,motor_speed)
+
+	
 
 def main(argv):
-	global x, y, th, d_x, d_y, d_th
+	global x, y, th, d_x, d_y, d_th, driving_P, driving_I, driving_error_sum
 
 	moving = False	# tracks if we are currently moving towards the target point
-
-	#rotation PID
-	rot_P = 20.0
-	rot_I = 0.0
-	rot_D = 0.0
-	rot_error_sum = 0
-	
-	#driving angle PID
-	driving_P = 20.0
-	driving_I = 0.0
-	driving_D = 0.0
-	driving_error_sum = 0
 	
 	(current_pose_update, desired_pose_update) = pose_subscriber()
 	
 	key_pressed = False
 	
 	# variables for waypoint navigator test
-	coordinates_array = [[6.5, 2.2], [1,2.2], [1,0.8], [6, 0.8]]
-	num_points = 3
+	#coordinates_array = [[6, 2.2, math.pi/2], [6, 2.2, math.pi], [6, 2.2, 3 * math.pi/2], [6, 2.2, 2 * math.pi],[5,2.2, -999], [5,0.8,-999], [6, 0.8,-999]]
+	#num_points = 6
+	
+	num_points = 0
+	coordinates_array = np.zeros((20,3))
+	
+	list = [[0 for x in range(10)] for x in range(10)] 
+	
+	for i in range(0 , 4):
+		for j in range (0, 3):
+			coordinates_array[3 * i + j ][0] = (4 + i / 2)
+			coordinates_array[3 * i + j][1] = (1.5)
+			coordinates_array[3 * i + j][2] = (j * math.pi/2)
+			num_points += 1
 	index = 0
+	justStarted = True # need to track if we've just started, otherwise we can get stuck on the first waypoint.
 
 	while key_pressed == False:
 		loop_start = time.time() # get loop time at start for loop rate calculations
@@ -160,6 +193,7 @@ def main(argv):
 		# set current waypoint as navigational target
 		d_x = coordinates_array[index][0]
 		d_y = coordinates_array[index][1]
+		d_th = coordinates_array[index][2]
 		
 		# calculate angular difference
 		target_heading = angle_between_points(x,y,d_x,d_y)
@@ -187,15 +221,17 @@ def main(argv):
 					print("Orienting towards target...")
 					#rotate to face heading
 					# start motors moving based on angular difference
-					motor_speed = int(round(rot_P * math.fabs(heading_error) + rot_I * rot_error_sum))
-					rot_error_sum += heading_error
+					#motor_speed = int(round(rot_P * math.fabs(heading_error) + rot_I * rot_error_sum))
+					#rot_error_sum += heading_error
 
-					if(heading_error > 0):
-						rot = 3
-					if(heading_error < 0):
-						rot = 2
+					#if(heading_error > 0):
+					#	rot = 3
+					#if(heading_error < 0):
+					#	rot = 2
 						
-					publish_motor_command(rot,motor_speed,motor_speed)
+					#publish_motor_command(rot,motor_speed,motor_speed)
+					
+					turn_to_face(heading_error)
 			else:
 				#if we are moving but coordinates aren't reached...
 				if(heading_error > travel_heading_error_window):
@@ -213,18 +249,28 @@ def main(argv):
 					
 		else:
 			print("Coordinates reached!")
-			if(moving == True):
+			#if we've just reached the point, stop!
+			if(moving == True or justStarted == True):
+				justStarted = False
 				publish_motor_command(0,0,0)
 				moving = False
 				driving_error_sum = 0
 				print("Motors stopped!")
 				
+			# now, turn to face the desired heading (if there is one)	
+			heading_offset = angular_difference(d_th,th)
+			
+			if(d_th != -999 and math.fabs(heading_offset) > rot_threshold):	#-999 means orientation doesn't matter, otherwise turn
+					print("Matching desired orientation...")
+
+					turn_to_face(heading_offset)
+			else:
 				# loops through waypoints sequentially for test purposes
 				if(index < num_points):
 					index+=1
 				else:
 					index=0
-	
+					
 		loop_sleep = delay - (time.time() - loop_start) # if loop delay too low then will print data faster than updates are recieved
 		
 		if loop_sleep > 0:

@@ -20,7 +20,7 @@ def map_broadcaster():
 	
 	new_map = create_map()
 
-	rate = rospy.Rate(1)
+	rate = rospy.Rate(.1)
 	
 	key_pressed = False
 	

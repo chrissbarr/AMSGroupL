@@ -170,20 +170,24 @@ def main(argv):
 	key_pressed = False
 	
 	# variables for waypoint navigator test
-	#coordinates_array = [[6, 2.2, math.pi/2], [6, 2.2, math.pi], [6, 2.2, 3 * math.pi/2], [6, 2.2, 2 * math.pi],[5,2.2, -999], [5,0.8,-999], [6, 0.8,-999]]
-	#num_points = 6
+	coordinates_array = [[6, 2.2, math.pi/2], [6, 2.2, math.pi], [6, 2.2, 3 * math.pi/2], [6, 2.2, 2 * math.pi],[5,2.2, -999], [5,0.8,-999], [6, 0.8,-999]]
+	num_points = 6
 	
-	num_points = 0
-	coordinates_array = np.zeros((20,3))
+	#num_points = 0
+	#coordinates_array = np.zeros((20,3))
 	
-	list = [[0 for x in range(10)] for x in range(10)] 
+	#list = [[0 for x in range(10)] for x in range(10)] 
 	
+	"""
 	for i in range(0 , 4):
 		for j in range (0, 3):
-			coordinates_array[3 * i + j ][0] = (4 + i / 2)
+			coordinates_array[3 * i + j][0] = (4 + i / 2)
 			coordinates_array[3 * i + j][1] = (1.5)
 			coordinates_array[3 * i + j][2] = (j * math.pi/2)
 			num_points += 1
+			
+	"""
+	
 	index = 0
 	justStarted = True # need to track if we've just started, otherwise we can get stuck on the first waypoint.
 

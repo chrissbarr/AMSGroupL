@@ -38,7 +38,7 @@ def create_map( ):
     
     test_map.header.frame_id = 'world'
     
-    test_map.info.resolution = 1.0 
+    test_map.info.resolution = 250 
     test_map.info.width = 20
     test_map.info.height = 10
     test_map.info.origin.position.x = -test_map.info.width/2

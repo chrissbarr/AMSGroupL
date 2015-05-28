@@ -170,8 +170,11 @@ def main(argv):
 	key_pressed = False
 	
 	# variables for waypoint navigator test
-	coordinates_array = [[6, 2.2, math.pi/2], [6, 2.2, math.pi], [6, 2.2, 3 * math.pi/2], [6, 2.2, 2 * math.pi],[5,2.2, -999], [5,0.8,-999], [6, 0.8,-999]]
-	num_points = 6
+	#coordinates_array = [[6, 2.2, math.pi/2], [6, 2.2, math.pi], [6, 2.2, 3 * math.pi/2], [6, 2.2, 2 * math.pi],[5,2.2, -999], [5,0.8,-999], [6, 0.8,-999]]
+	coordinates_array = [[6, 2.2, -999] ,[5,2.2, -999], [5,0.8,-999], [6, 0.8,-999]]
+	num_points = len(coordinates_array)-1
+	
+	print("Num Coordinates: %d") % num_points
 	
 	#num_points = 0
 	#coordinates_array = np.zeros((20,3))

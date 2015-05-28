@@ -51,7 +51,7 @@ def vicon_update(data):
 
 	v_pose[0] = v_pose[0] - init_x
 	v_pose[1] = v_pose[1] - init_y
-	v_pose[2] = v_pose[2] - init_yaw
+	v_pose[2] = v_pose[2]# - init_yaw
 	 
 
 	

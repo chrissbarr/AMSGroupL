@@ -216,7 +216,7 @@ std_msgs::Float32MultiArray force_msg;
 
 // ------------------------ IMU specific section ------------------------
 
-#define GYRO_LIMIT 0.0 // Constant for gyro movement limit before stop including value in drift correction calculation (i.e. adaptive filter).
+#define GYRO_LIMIT 20.0 // Constant for gyro movement limit before stop including value in drift correction calculation (i.e. adaptive filter).
 #define GYRO_TC 100.0 // Time constant for gyro offset calculation (x, y, z).
 
 ADXL345 accel;
@@ -226,17 +226,17 @@ ITG3200 gyro = ITG3200();
 const String IMU_STATUS_TOPIC_STRING = ROBOT_IDENTIFIER + GETTER_IDENTIFIER + "/IMU_status";
 const char * IMU_STATUS_TOPIC = IMU_STATUS_TOPIC_STRING.c_str();
 
-const float mag_offset[3] = {0.0, 0.0, 0.0}; // Magnetometer offset calibration values. These will be different for every IMU.
-const float mag_scale[3] = {1.0, 1.0, 1.0}; // Magnetometer scale calibration. These will be different for every IMU.
+const float mag_offset[3] = {9.84, -101.30, -39.58}; // Magnetometer offset calibration values. These will be different for every IMU.
+const float mag_scale[3] = {537.21, 604.47, -512.55}; // Magnetometer scale calibration. These will be different for every IMU.
 
 float IMU_data[9]; // Setup array for IMU data. 3 x acceleration, 3 x magnetometer and 3 x gyroscope.
 float acc_data[3]; // Accelerometer needs a vector to put data into.
-float acc_offset[3] = {0.0, 0.0, 0.0}; // Accelerometer offsets.
-float acc_scale[3] = {1.0, 1.0, 1.0}; // Accelerometer gains.
+float acc_offset[3] = {-0.65, -4.72, -22.52}; // Accelerometer offsets.
+float acc_scale[3] = {263.15, 264.15, 261.43}; // Accelerometer gains.
 
 float gyro_data[3]; // Gyro needs a vector to put data into.
 float gyro_offset[3] = {0, 0, 0}; // Nominal gyro offset values for all 3 axes to remove drift. Must be very close to real value to start with but will be updated by the adaptive filter.
-const float gyro_scale = 1; // Gyroscope scale value. Convert to radians / second.
+const float gyro_scale = -56977.47; // Gyroscope scale value. Convert to radians / second.
 
 std_msgs::Float32MultiArray IMU_msg; // ROS message variable for IMU data.
 

@@ -19,7 +19,11 @@ from std_msgs.msg import *
 # define settings
 WheelDiameter = 45.0	# wheel diameter in mm
 WheelBase = 230.0 * 2		# distance between wheels in mm
-DistancePerCount = (3.14159 *  WheelDiameter) / (320) # mm / encoder tick
+#--- Calculated (Theoretical) Value, ~ 0.442 mm / tick
+# DistancePerCount = (3.14159 *  WheelDiameter) / (320) # mm / encoder tick 
+
+#--- Measured, calibrated value:
+DistancePerCount = 0.0473
 
 x = 0.0	# x coordinate in mm
 y = 0.0	# y coordinate in mm

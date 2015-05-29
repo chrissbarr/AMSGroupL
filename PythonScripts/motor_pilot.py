@@ -32,6 +32,11 @@ rot_threshold = 0.1	# angle in radians, consider heading correct if within this 
 travel_heading_error_window = 0.5 # If angle to target > this during travel, robot will stop and reorient
 base_speed = 100 # Default speed robot travels at. Left and right motors are biased from this value to adjust steering.
 
+# NAVIGATION STATUS MESSAGES
+nav_coords_reached = "COORDS REACHED"
+nav_move_in_progress = "MOVING"
+
+
 #rotation settings
 rot_P = 20.0
 rot_I = 0.0
@@ -60,6 +65,7 @@ delay = 0.1 # update rate for main loop (s)
 rospy.init_node("motor_pilot", anonymous=False) # name the script on the ROS network
 
 pub = rospy.Publisher("/%s/set/motor_drive" % socket.gethostname(), std_msgs.msg.UInt8MultiArray, queue_size=10) # sets up the topic for publishing the motor commands
+status_pub = rospy.Publisher("nav_status", std_msgs.msg.String, queue_size=10) # sets up the topic for publishing the navigation status
 
 time.sleep(0.2) # make sure publisher setup
 
@@ -113,7 +119,7 @@ def desired_pose_update(data):
 	    
 	# convert orientation from quaternion to euler angles, read yaw
 	euler = tf.transformations.euler_from_quaternion(q)
-	th = euler[2]
+	d_th = euler[2]
 
 # checks if the target coordinates are reached. Returns true if current x/y are near target x/y within set threshold
 def coordinates_reached():
@@ -169,38 +175,10 @@ def main(argv):
 	
 	key_pressed = False
 	
-	# variables for waypoint navigator test
-	#coordinates_array = [[6, 2.2, math.pi/2], [6, 2.2, math.pi], [6, 2.2, 3 * math.pi/2], [6, 2.2, 2 * math.pi],[5,2.2, -999], [5,0.8,-999], [6, 0.8,-999]]
-	coordinates_array = [[6, 2.2, -999] ,[5,2.2, -999], [5,0.8,-999], [6, 0.8,-999]]
-	num_points = len(coordinates_array)-1
-	
-	print("Num Coordinates: %d") % num_points
-	
-	#num_points = 0
-	#coordinates_array = np.zeros((20,3))
-	
-	#list = [[0 for x in range(10)] for x in range(10)] 
-	
-	"""
-	for i in range(0 , 4):
-		for j in range (0, 3):
-			coordinates_array[3 * i + j][0] = (4 + i / 2)
-			coordinates_array[3 * i + j][1] = (1.5)
-			coordinates_array[3 * i + j][2] = (j * math.pi/2)
-			num_points += 1
-			
-	"""
-	
-	index = 0
 	justStarted = True # need to track if we've just started, otherwise we can get stuck on the first waypoint.
 
 	while key_pressed == False:
 		loop_start = time.time() # get loop time at start for loop rate calculations
-		
-		# set current waypoint as navigational target
-		d_x = coordinates_array[index][0]
-		d_y = coordinates_array[index][1]
-		d_th = coordinates_array[index][2]
 		
 		# calculate angular difference
 		target_heading = angle_between_points(x,y,d_x,d_y)
@@ -268,15 +246,14 @@ def main(argv):
 			heading_offset = angular_difference(d_th,th)
 			
 			if(d_th != -999 and math.fabs(heading_offset) > rot_threshold):	#-999 means orientation doesn't matter, otherwise turn
-					print("Matching desired orientation...")
-
-					turn_to_face(heading_offset)
+				print("Matching desired orientation...")
+				turn_to_face(heading_offset)
 			else:
-				# loops through waypoints sequentially for test purposes
-				if(index < num_points):
-					index+=1
-				else:
-					index=0
+				#target position and orientation is reached!
+				#stop the motors
+				publish_motor_command(0,0,0)
+				#and let all other scripts know
+				status_pub.pub(nav_coords_reached)
 					
 		loop_sleep = delay - (time.time() - loop_start) # if loop delay too low then will print data faster than updates are recieved
 		

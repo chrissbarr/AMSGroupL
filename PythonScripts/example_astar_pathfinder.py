@@ -177,6 +177,8 @@ def rosmap_to_map(rosmap):
 	print("\n\n")
 	
 	print(g_path)
+	
+	
 
 def run():
 	rospy.init_node('mapConverter',anonymous=True)

@@ -11,7 +11,24 @@ import collections
 import heapq
 
 import rospy 
+import std_msgs.msg
 from nav_msgs.msg import OccupancyGrid
+from geometry_msgs.msg import Point, Quaternion, PoseStamped, Pose
+import tf
+
+# NAVIGATION STATUS MESSAGES
+nav_coords_reached = "COORDS REACHED"
+nav_move_in_progress = "MOVING"
+current_nav_string = ""
+
+# DESIRED NAVIGATION COORDINATES
+current_d_x = 0		#from desired pose topic
+current_d_y = 0
+current_d_th = 0
+
+# setup publishing pose messages
+pose_pub = rospy.Publisher('desiredPose', Pose, queue_size=10)
+odom_broadcaster = tf.TransformBroadcaster()
 
 class Graph:
 	def __init__(self):
@@ -70,6 +87,50 @@ class PriorityQueue:
 	
 	def get(self):
 		return heapq.heappop(self.elements)[1]
+
+def pose_subscriber():
+	# subscribe to ROS data updates
+	DP = rospy.Subscriber("desiredPose", Pose, desired_pose_update)
+	NS = rospy.Subscriber("nav_status", std_msgs.msg.String, nav_status_update)
+	return (DP, NS)
+
+def desired_pose_update(data):
+	global current_d_x, current_d_y, current_d_th
+
+	# read in position
+	current_d_x = data.position.x
+	current_d_y = data.position.y
+	
+	# read in orientation
+	q = (
+	    data.orientation.x,
+	    data.orientation.y,
+	    data.orientation.z,
+	    data.orientation.w)
+	    
+	# convert orientation from quaternion to euler angles, read yaw
+	euler = tf.transformations.euler_from_quaternion(q)
+	current_d_th = euler[2]
+	
+def nav_status_update(message):
+	global current_nav_string
+	current_nav_string = message
+
+def send_desired_pose(x, y, th):
+    print("Requesting move to point: x: %.3f  y: %.3f  Th: %.1f") % (x, y, th) # print 2D pose data to terminal
+    #publish pose data to ros topic
+    msg = Pose()
+
+    q = tf.transformations.quaternion_from_euler(0, 0, th)
+
+    msg.position = Point(x,y,0)
+
+    msg.orientation.x = q[0]
+    msg.orientation.y = q[1]
+    msg.orientation.z = q[2]
+    msg.orientation.w = q[3]
+
+    pose_pub.publish(msg)
 		
 def dijkstra_search(graph, start, goal):
 	frontier = PriorityQueue()
@@ -145,6 +206,14 @@ def breadth_first_search(graph, start, goal):
 	
 	return came_from
 
+def cell_to_coord(map,cell_x, cell_y):
+	"""
+	Converts grid x and y coordinates into real-world coordinates
+	"""
+	x = map.info.origin.position.x + (cell_x * map.info.resolution)
+	y = map.info.origin.position.y + (cell_y * map.info.resolution)
+	return (x, y)
+
 def rosmap_to_map(rosmap):
 	global occupancy_grid
 	width = rosmap.info.width
@@ -177,6 +246,30 @@ def rosmap_to_map(rosmap):
 	print("\n\n")
 	
 	print(g_path)
+	print(len(g_path))
+
+	waypoint_index = 0
+
+	while(waypoint_index < len(g_path)-1):	#until we've reached the end of the path
+
+		(d_x, d_y) = cell_to_coord(rosmap, g_path[waypoint_index][0], g_path[waypoint_index][1])
+
+		if(current_d_x == d_x and current_d_y == d_y):
+			# if the navigation system has reached the coordinate
+			if(current_nav_string == nav_coords_reached):
+				print("Waypoint %d has been reached.") % waypoint_index
+				measure_temperature()
+				if(waypoint_index < num_waypoints):
+					waypoint_index += 1
+					play_sound_group(sound_group_search,5*talkativity)
+				else:
+					grid_finished = True
+		else:
+			#coordinate isn't set - set it
+			print("Move to cell: [%d, %d]") % (g_path[waypoint_index][0], g_path[waypoint_index][1])
+			send_desired_pose(d_x, d_y, -999)
+
+		time.sleep(0.5)
 	
 	
 
@@ -184,6 +277,7 @@ def run():
 	rospy.init_node('mapConverter',anonymous=True)
 	# subscribe to ros occupancy-grid topic
 	occupancy_grid_topic = rospy.Subscriber("mapBroadcaster", OccupancyGrid, rosmap_to_map)
+	desired_pose_update, nav_status_update = pose_subscriber()
 	
 	key_pressed = False
 	rate = rospy.Rate(1)
@@ -191,6 +285,10 @@ def run():
 	while key_pressed == False:
 		key_pressed = select.select([sys.stdin], [], [], 0) == ([sys.stdin], [], []) # is key pressed?
 		rate.sleep()
+
+	desired_pose_update.unregister()
+	nav_status_update.unregister()
+	occupancy_grid_topic.unregister()
 
 
 if __name__=='__main__':

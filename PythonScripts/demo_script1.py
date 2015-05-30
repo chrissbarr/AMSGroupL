@@ -36,6 +36,7 @@ import math
 import pygame
 from os.path import expanduser
 
+import random
 from random import randint
 import numpy as np
 
@@ -48,9 +49,11 @@ import tf
 # SOUNDS
 sound_folder = '{0}/Documents/Sounds/PortalTurret/'.format(expanduser('~')) # folder that contains the sound file
 sound_group_startup = ['turret_deploy_2.ogg','turret_deploy_4.ogg']
+sound_group_shutdown = ['turret_disabled_4.ogg','turret_retire_1.ogg','turret_retire_2.ogg','turret_retire_4.ogg','turret_retire_5.ogg','turret_retire_6.ogg','turret_retire_7.ogg']
+sound_group_error = ['turret_disabled_2.ogg','turret_tipped_2.ogg','turret_tipped_3.ogg','turret_tipped_4.ogg']
 sound_group_search = ['turret_search_4.ogg','turret_autosearch_2.ogg','turret_autosearch_3.ogg']
 sound_group_found = ['turret_active_6.ogg','turret_active_7.ogg','turret_active_8.ogg','sp_sabotage_factory_good_prerange01.ogg']
-sound_group_pickup = ['turret_pickup_3.ogg','turret_pickup_8.ogg','turret_pickup_7.ogg','turret_pickup_10.ogg','turretlaunched03.ogg']
+sound_group_pickup = ['turret_pickup_3.ogg','turret_pickup_8.ogg','turret_pickup_7.ogg','turret_pickup_10.ogg','turretlaunched03.ogg','turretlightbridgeblock03.ogg']
 sound_group_ping = ['ping.ogg']
 
 # IMU
@@ -61,9 +64,10 @@ acc_z = 0
 # PERSONALITY CORE SETTINGS
 talkativity = 1.0
 
-pickup_threshold = 0.2	# z-accel value needed to trigger 'pick-up' event
+pickup_threshold = 0.1	# z-accel value needed to trigger 'pick-up' event
 pickup_comment_time_threshold = 10	# minimum time between 'pick-up' remarks
 last_pickup_comment_time = 0	# tracks time last comment was made
+last_played_sound = 'none'
 
 # NAVIGATION STATUS MESSAGES
 nav_coords_reached = "COORDS REACHED"
@@ -75,6 +79,12 @@ current_d_x = 0		#from desired pose topic
 current_d_y = 0
 current_d_th = 0
 
+# MOTOR SPEED VARIABLES
+# Only used to check current motor speed
+motor_direction = 0
+motor_speed_left = 0
+motor_speed_right = 0
+
 delay = 0.1 # update rate for main loop (s)
 
 rospy.init_node("demo_script_controller", anonymous=False) # name the script on the ROS network
@@ -83,34 +93,34 @@ rospy.init_node("demo_script_controller", anonymous=False) # name the script on 
 pose_pub = rospy.Publisher('desiredPose', Pose, queue_size=10)
 odom_broadcaster = tf.TransformBroadcaster()
 
-"""
-Generates an array representing a search grid. 
-The array will contain each point 'headings_per_point' times, each time with a different, equiangular heading.
-
-start_x = x coordinate of corner of search grid (in m)
-start_y = y coordinate of corner of search grid (in m)
-x_cells = number of search points in the x axis
-y_cells = number of search points in the y axis
-cell_size = size of each 'cell' - the distance between grid points (in m)
-headings_per_point = number of directions to face at each point. (i.e. 4 rotates in 90 degree intervals)
-
-Movement sweeps in an optimised pattern, x-direction alternating as shown below:
-oooooo
-     v
-oooooo
-v
-oooooo
-	 v
-	 
-This is preferable to the default iterated-loop pattern, which would result in unneeded movement:
-oooooo
-v<<<<<
-oooooo
->>>>>v
-oooooo
-v<<<<<
-"""
 def generate_search_grid(start_x, start_y, x_cells, y_cells, cell_size, headings_per_point):
+	"""
+	Generates an array representing a search grid. 
+	The array will contain each point 'headings_per_point' times, each time with a different, equiangular heading.
+
+	start_x = x coordinate of corner of search grid (in m)
+	start_y = y coordinate of corner of search grid (in m)
+	x_cells = number of search points in the x axis
+	y_cells = number of search points in the y axis
+	cell_size = size of each 'cell' - the distance between grid points (in m)
+	headings_per_point = number of directions to face at each point. (i.e. 4 rotates in 90 degree intervals)
+
+	Movement sweeps in an optimised pattern, x-direction alternating as shown below:
+	oooooo
+	     v
+	oooooo
+	v
+	oooooo
+		 v
+		 
+	This is preferable to the default iterated-loop pattern, which would result in unneeded movement:
+	oooooo
+	v<<<<<
+	oooooo
+	>>>>>v
+	oooooo
+	v<<<<<
+	"""
 	search_grid_array=[]
 	
 	x_start = 0		# first x_cell index
@@ -133,6 +143,7 @@ def msg_subscriber():
 	DP = rospy.Subscriber("desiredPose", Pose, desired_pose_update)
 	NS = rospy.Subscriber("nav_status", std_msgs.msg.String, nav_status_update)
 	IMU = rospy.Subscriber("/mechbot_12/get/IMU_status", std_msgs.msg.Float32MultiArray,imu_status_update)
+	MD = rospy.Subscriber("/mechbot_12/set/motor_drive", std_msgs.msg.UInt8MultiArray, motor_drive_update)
 	return (DP, NS)
 	
 def desired_pose_update(data):
@@ -159,9 +170,14 @@ def nav_status_update(message):
 	
 def imu_status_update(data):
 	global acc_x, acc_y, acc_z
-	acc_x = data[0]
-	acc_y = data[1]
-	acc_z = data[2]
+	acc_x = data.data[0]
+	acc_y = data.data[1]
+	acc_z = data.data[2]
+	
+def motor_drive_update(data):
+	motor_direction = data.data[0]
+	motor_speed_left = data.data[1]
+	motor_speed_right = data.data[2]
 
 def send_desired_pose(x, y, th):
     print("Requesting move to point: x: %.3f  y: %.3f  Th: %.1f") % (x, y, th) # print 2D pose data to terminal
@@ -197,9 +213,16 @@ def play_sound(sound_file): # subroutine to play the specified sound file
 	pygame.mixer.music.play()
     
 def play_sound_group(sound_group, probability):
+	global last_played_sound
 	play_sound_probability = randint(0,100)
 	if(play_sound_probability <= probability):
 		selected_sound_index = randint(0,len(sound_group)-1)
+
+		# make sure we don't play the same clip twice in a row
+		while(sound_group[selected_sound_index] == last_played_sound):
+			selected_sound_index = randint(0,len(sound_group)-1)
+
+		last_played_sound = sound_group[selected_sound_index]
 		play_sound(sound_group[selected_sound_index])
 		
 def measure_temperature():
@@ -212,17 +235,40 @@ def measure_temperature():
 		play_sound_group(sound_group_found,100)
 		time.sleep(5)
 		
+def check_motors_stopped():
+	if(motor_speed_left == 0 and motor_speed_right == 0):
+		return True
+	else:
+		return False
+		
 def react_to_pickup():
-	# detect if picked up from IMU data
-	if(math.fabs(acc_z) > 0.2):
+	global last_pickup_comment_time, pickup_threshold, pickup_comment_time_threshold
+	# detect if picked up from IMU data - z liftoff means picked up any time, otherwise if motors are stopped but platform experiences any acceleration
+	if(math.fabs(acc_z) > pickup_threshold or ((math.fabs(acc_x) > pickup_threshold or math.fabs(acc_y) > pickup_threshold) and check_motors_stopped() == True)):
+		print("Put me down!")
 		# robot is being handled / carried. Respond if appropriate:
-		if(time.time() - last_pickup_comment_time < pickup_comment_time_threshold):
+		if(time.time() - last_pickup_comment_time > pickup_comment_time_threshold):
 			# enough time has passed to make another remark...
 			play_sound_group(sound_group_pickup,90)
 			last_pickup_comment_time = time.time()
 
-def personality_core():
+def personality_core_init():
+	random.seed()
+	sound_init()
+	play_sound_group(sound_group_startup,100)
+
+def personality_core_update():
 	react_to_pickup()
+	
+def personality_core_shutdown():
+	play_sound_group(sound_group_shutdown,100)
+	print ("Shutting down...")
+
+	while (pygame.mixer.music.get_busy()):	# wait for sound to stop playing
+		time.sleep(.1)
+
+	pygame.mixer.quit()
+	
 
 def main(argv):
 	key_pressed = False
@@ -230,14 +276,15 @@ def main(argv):
 	#subscribe to the relevant ROS topics
 	(desired_pose_update, nav_status_update) = msg_subscriber()
 	
+	personality_core_init()
+	
 	# First, generate the search grid
 	grid, num_waypoints = generate_search_grid(1,2,5,4,0.25,4)
 	waypoint_index = 0
 	grid_finished = False
 	print(grid)
 	
-	sound_init()
-	play_sound_group(sound_group_startup,100)
+	
 	
 	
 	while key_pressed == False:
@@ -261,25 +308,26 @@ def main(argv):
 			#coordinate isn't set - set it
 			send_desired_pose(d_x, d_y, d_th)
 			
-		personality_core()
-		
-		
+		personality_core_update()
 		loop_timing(delay,loop_start)
 		
 		key_pressed = select.select([sys.stdin], [], [], 0) == ([sys.stdin], [], []) # is key pressed?
 	
-	pygame.mixer.quit()
-	print ("Exit script")
+	personality_core_shutdown()
+	
 
 if __name__ == '__main__': # main loop
 	try: # if no problems
 		main(sys.argv[1:])
         
-	except rospy.ROSInterruptException: # if a problem
- 		pass
- 		
-
-
-
-
-
+	#except rospy.ROSInterruptException: # if a problem
+	#	play_sound_group(sound_group_error,100)
+	#	time.sleep(2)
+ 	#	pass
+ 	except: # if a problem
+		play_sound_group(sound_group_error,100)
+		print ("Error!")
+		while (pygame.mixer.music.get_busy()):	# wait for sound to stop playing
+			time.sleep(.1)
+		pass
+ 

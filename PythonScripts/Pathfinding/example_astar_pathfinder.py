@@ -261,7 +261,6 @@ def rosmap_to_map(rosmap):
 				measure_temperature()
 				if(waypoint_index < num_waypoints):
 					waypoint_index += 1
-					play_sound_group(sound_group_search,5*talkativity)
 				else:
 					grid_finished = True
 		else:

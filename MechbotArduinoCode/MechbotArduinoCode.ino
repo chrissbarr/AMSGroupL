@@ -162,6 +162,7 @@ int motor_speed_right = 0;
 float control_data[5] = {0.0, 0.0, 0.0, 0.0, 0.0}; // Motor control values (on?, Proportional, Integral, Derivative, Encoders High Speed).
 // Put in motor controller variables here.
 int error_sum[2] = {0, 0};
+int error_prev[2] = {0, 0};
 
 #define PID_HARDCODED //if defined, PID values will be locked to the below values:
 #ifdef PID_HARDCODED
@@ -876,7 +877,9 @@ int pid_motor_control(int motor_num) {
   error_sum[motor_num] += error;
   
   //next, calculate the desired speed for the motor
-  motor_output = 16 * ((error * kp) + (error_sum[motor_num] * ki));
+  motor_output = 16 * ((error * kp) + (error_sum[motor_num] * ki) + ((error - error_prev[motor_num]) * kd));
+  
+  error_prev[motor_num] = error;
   
   return motor_output;
   

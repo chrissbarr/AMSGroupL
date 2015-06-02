@@ -220,24 +220,25 @@ std_msgs::Float32MultiArray force_msg;
 #define GYRO_LIMIT 20.0 // Constant for gyro movement limit before stop including value in drift correction calculation (i.e. adaptive filter).
 #define GYRO_TC 100.0 // Time constant for gyro offset calculation (x, y, z).
 
-ADXL345 accel;
+ADXL345 Accel;//ADXL345 accel;
 HMC58X3 magn;
 ITG3200 gyro = ITG3200();
 
 const String IMU_STATUS_TOPIC_STRING = ROBOT_IDENTIFIER + GETTER_IDENTIFIER + "/IMU_status";
 const char * IMU_STATUS_TOPIC = IMU_STATUS_TOPIC_STRING.c_str();
 
-const float mag_offset[3] = {9.84, -101.30, -39.58}; // Magnetometer offset calibration values. These will be different for every IMU.
-const float mag_scale[3] = {537.21, 604.47, -512.55}; // Magnetometer scale calibration. These will be different for every IMU.
+float mag_offset[3] = {9.84, -101.30, -39.58}; // Magnetometer offset calibration values. These will be different for every IMU.
+//float mag_scale[3] = {537.21, 604.47, -512.55}; // Magnetometer scale calibration. These will be different for every IMU.
+float mag_scale[3] = {537.21, 604.47, -512.55}; // Magnetometer scale calibration. These will be different for every IMU.
 
 float IMU_data[9]; // Setup array for IMU data. 3 x acceleration, 3 x magnetometer and 3 x gyroscope.
-float acc_data[3]; // Accelerometer needs a vector to put data into.
-float acc_offset[3] = {-0.65, -4.72, -22.52}; // Accelerometer offsets.
-float acc_scale[3] = {263.15, 264.15, 261.43}; // Accelerometer gains.
+int acc_data[3]; // Accelerometer needs a vector to put data into.
+float acc_offset[3] = {0, 0, 0}; // Accelerometer offsets.
+float acc_scale[3] = {263.15, 240.00, 261.43}; // Accelerometer gains.
 
 float gyro_data[3]; // Gyro needs a vector to put data into.
 float gyro_offset[3] = {0, 0, 0}; // Nominal gyro offset values for all 3 axes to remove drift. Must be very close to real value to start with but will be updated by the adaptive filter.
-const float gyro_scale = -56977.47; // Gyroscope scale value. Convert to radians / second.
+float gyro_scale = -56977.47; // Gyroscope scale value. Convert to radians / second.
 
 std_msgs::Float32MultiArray IMU_msg; // ROS message variable for IMU data.
 
@@ -624,8 +625,8 @@ void setup() // This subroutine runs once at start-up and initialises the system
 
   // Set up IMU.
   print_bottom_LCD_line("CALIBRATING IMU"); // Write to LCD describing operation.
-  accel.init(ADXL345_ADDR_ALT_LOW); // Initialise accelerometer.
-  accel.set_bw(ADXL345_BW_12); // Set byte width.
+  Accel.init(ADXL345_ADDR_ALT_LOW); // Initialise accelerometer.
+  Accel.set_bw(ADXL345_BW_12); // Set byte width.
   magn.init(true); // No delay needed as we have already a delay(5) in HMC58X3::init().
   magn.calibrate(1, 10); // Calibrate HMC using self test, not recommended to change the gain after calibration. (Gain, number of sample). Use gain 1 = default, valid (0 - 7), 7 not recommended.
   magn.setMode(0); // Single mode conversion was used in calibration, now set continuous mode.
@@ -905,11 +906,11 @@ void force_message() // Need to convert raw values into useful units.
 
 void IMU_message() // Send IMU values over network.
 {
-  accel.get_Gxyz(acc_data); // Get accelerometer data.
+  Accel.readAccel(acc_data); // Get accelerometer data.
   // Calculate normalisation factor.
   for (int i = 0; i <= 2; i++)
   {
-    IMU_data[i] = acc_data[i] / acc_scale[i]; // Normalise accelerometer data and put into IMU vector.
+    IMU_data[i] = acc_data[i] / acc_scale[i] + acc_offset[i]; // Normalise accelerometer data and put into IMU vector.
   }
 
   magn.getValues(&IMU_data[3], &IMU_data[4], &IMU_data[5]); // Get magnetometer values.

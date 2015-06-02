@@ -138,7 +138,7 @@ def react_to_pickup():
 	
 	if(check_IMU_published()):
 		# detect if picked up from IMU data - z liftoff means picked up any time, otherwise if motors are stopped but platform experiences any acceleration
-		if(math.fabs(acc_z-1) > pickup_threshold):# or ((math.fabs(acc_x) > pickup_threshold or math.fabs(acc_y) > pickup_threshold) and (check_motors_stopped() and check_encoders_stopped()))):
+		if(math.fabs(acc_z+1) > pickup_threshold):# or ((math.fabs(acc_x) > pickup_threshold or math.fabs(acc_y) > pickup_threshold) and (check_motors_stopped() and check_encoders_stopped()))):
 			print("Put me down!")
 			# robot is being handled / carried. Respond if appropriate:
 			if(time.time() - last_pickup_comment_time > pickup_comment_time_threshold):

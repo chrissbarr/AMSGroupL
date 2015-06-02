@@ -1,0 +1,327 @@
+h2 {
+    padding: 5px;
+    text-align:center;
+    margin-top: 0em;
+}
+
+h3 {
+    padding: 5px;
+    text-align:left;
+    margin-top: -5px;
+    margin-bottom: 0.2em;
+}
+
+p {
+    padding: 5px;
+}
+
+.colour1 {
+    background: #336699;
+}
+
+.colour2 {
+    background: #666666;
+}
+
+.colour3 {
+    background: #999999;
+}
+
+.colour4 {
+    background: #BBBBBB;
+}
+
+.colourTxt {
+    color: #FFF
+}
+
+.colourTxtH {
+    color: #FFF;
+    margin-left: -5px;
+    margin-right: -5px;
+}
+
+.container {
+    padding: 5px;
+    font-family: Verdana, Arial, Sans-serif;
+    text-align:justify;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 4.5em;
+}
+
+.container div {
+    padding: 5px;
+}
+
+.pracInfo {
+    width: 24.5em;
+    padding:0em;
+}
+
+.pracCtrls{
+    width: 31.5em;
+}
+
+.pracInstr {
+    height: 31em;
+    padding: 5px;
+    margin-left: 0.5em;
+    margin-right: 0.5em;
+    overflow: auto;
+}
+
+.pracBlurb {
+    height: 15em;
+    padding: 5px;
+    overflow: auto;
+    font-size: 0.85em
+}
+
+.left {
+    height: 100%;
+    float: left;
+    margin-right: 0.5em
+}
+
+.right {
+    height: 100%;
+    float: left;
+}
+
+.arrow {
+    padding: 0.5em;
+}
+
+.dataReturn {
+    width: 5em;
+    border: 0;
+}
+
+.dataInput {
+    width: 3em;
+}
+
+.header {
+    width: 100%;
+    height: 4em;
+    position: fixed;
+    margin-top: -4.5em;
+    margin-left: -0.5em;
+    padding-left: 1em;
+    padding-top: 0.25em;
+    float:top;
+    min-width: 57em;
+    z-index: 1000;
+}
+
+.colourCtrls  {
+    position:fixed;
+    top:0px;
+    right:5px;
+}
+
+.tblLayout td {
+    padding: 0.20em;  
+}
+
+.tblHiddenLayout, td, th {
+    padding: 0.0em;
+    margin: 0.0em;
+    border: 0em;
+}
+
+#batteryMeter  {
+    position:fixed;
+    top:25px;
+    right:85px;
+}
+
+#clgContainer {
+    width: 82em;
+    height: 100em;
+}
+
+#stdContainer {
+    width: 100em;
+    height: 110em;
+}
+
+#mobContainer {
+    width: 60em;
+    height: 200em;
+}
+
+#prac1Container {
+    width: 60em;
+    height: 56em;
+}
+
+#prac2Container {
+    width: 62em;
+    height: 75em;
+}
+
+#Hardware {
+    height: 107.5em;
+    width: 15em;
+    padding-right: 10px;
+    float:left;
+    overflow:auto;
+}
+
+#lcd {
+    height: 12em;
+    width: 15em;
+    float:left
+}
+
+#logs {
+    height: 12em;
+    width: 25em;
+    float:left
+}
+
+#logo {
+    height: 12em;
+    width: 25em;
+    float:left;
+    background: #055495;
+}
+
+#pracIntro {
+    height: 12em;
+    width: 18em;
+    float:left
+}
+
+#remote {
+    height: 12em;
+    width: 18em;
+    float:left
+}
+
+#servo {
+    height: 12em;
+    width: 15em;
+    float:left
+}
+
+#score {
+    height: 10em;
+    width: 18em;
+    float:left
+}
+
+#lcdBasic {
+    height: 4em;
+    width: 18em;
+    float:left
+}
+
+#sensors {
+    width: 32em;
+    height: 36em;
+    float:left;
+    clear:top;
+}
+
+#waypoints {
+    width: 32em;
+    height: 33em;
+    padding-right: 10px;
+    float:left;
+    clear:top;
+    overflow:auto;
+}
+
+#map {
+    width: 42em;
+    height: 33em;
+    float:left;
+    clear:top;
+}
+
+#vicon {
+    width: 74.5em;
+    height: 15em;
+    float:left;
+    clear:top;
+    overflow:auto;
+    padding-right: 7.5px;
+}
+
+#imu {
+    width: 74.5em;
+    height: 9em;
+    float:left;
+    clear:top;
+}
+
+#imuTable td
+{
+  vertical-align: middle;
+  text-align: center;
+  padding: 5px;
+  min-width: 3em;
+}
+
+#camera {
+    width: 42em;
+    height: 36em;
+    float:left;
+    clear:top;
+}
+
+#prac1Remote {
+    height: 11em;
+    width: 15em;
+    float:left
+}
+
+#ctrlVars {
+    height: 11em;
+    width: 15em;
+    float:left;
+}
+
+#results{
+    width: 30em;
+    float: left;
+    clear: top;
+}
+
+#graphs{
+    width: 30em;
+    float: left;
+    clear: top;
+}
+
+#dataLogger{
+    width: 30em;
+    float: left;
+    clear: top;
+}
+
+#splMenu {
+	width: 12em;
+}
+
+#splPic {
+	width: 15em;
+}
+
+#tblOutputs {
+  font-size: 0.85em
+}
+
+.containerSpl {
+    padding: 5px;
+    font-family: Verdana, Arial, Sans-serif;
+    text-align:justify;
+    width: 33.5em;
+    height: 20em;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 4.5em;
+}

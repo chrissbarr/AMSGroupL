@@ -1,0 +1,93 @@
+<div id="waypoint_commands" title="Waypoints">
+  <div class="MobileOnly">
+    <hr></hr>
+  </div>
+  <h4>Current Pose</h4>
+  <table border="1" cellpadding="3px">
+    <tr>
+        <td>x (m):<td>
+        <td><div id="-${hostname}-hardware-Pose_0_data" class="hardware_info_data"></div></td>
+        <td>y (m):<td>
+        <td><div id="-${hostname}-hardware-Pose_1_data" class="hardware_info_data"></div></td>
+        <td>theta (rad):<td>
+        <td><div id="-${hostname}-hardware-Pose_2_data" class="hardware_info_data"></div></td>
+    </tr>
+  </table>
+
+  <h4>Course Planning</h4>
+  <div id="waypoint_section">
+    <div id="waypoint_point_0" class="waypoint_point">
+      <input type="text" class="point_x">
+      <input type="text" class="point_y">
+      <input type="text" class="point_theta">
+      <input type="button" class="waypoint_remove" value="-" >
+    </div>	
+  </div>
+  <input type="button" value="Add Point" onclick="add_waypoint_point();">
+  <input type="button" value="Update" onclick="waypoint();">
+</div>
+ 
+
+
+<script>
+
+$(function(){
+    if(!mobile) {  //Disable the floating boxes
+    /*
+        $("#waypoint_commands").dialog({
+            width: 750,
+            resizable: false,
+            beforeClose: dialog_close,
+        });
+        $( "#waypoint_commands" ).dialog("close");
+        $( "#waypoint_commands" ).dialog( "option", "position", { at: "left bottom"} );
+
+
+                    position: {at:"left bottom - 10"}
+                    */
+    }
+});
+
+function waypoint(){
+    var total_count = 0;
+    $("#waypoint_section").children().each(function(){
+        total_count += 1; // count total number of elements
+    })
+    var count = 0;
+    var point = [];
+    //var waypoints = []; //define new blank array
+    $("#waypoint_section").children().each(function(){
+        id = $(this).attr("id");
+        console.log(id);
+        x = $("#" + id + " .point_x").attr("value");
+        y = $("#" + id + " .point_y").attr("value");
+        theta = $("#" + id + " .point_theta").attr("value");
+        point = [total_count, count, parseFloat(x), parseFloat(y), parseFloat(theta)];
+        //waypoints.push(point); //append next point on array
+        sendRosMessage("/${hostname}/command/Waypoints", "std_msgs/Float64MultiArray", point);
+        count += 1;
+    });
+    //sendRosMessage("/${hostname}/command/Waypoints", "std_msgs/Float64MultiArray", waypoint);
+}
+
+function add_waypoint_point(){
+    new_point = $("#waypoint_section").children().last().clone(true);
+    new_id = new_point.attr("id").replace("waypoint_point_", "");
+    new_id = "waypoint_point_" + (parseInt(new_id) + 1)
+    new_point.attr("id", new_id);
+    new_point.children().each(function(){
+        if ($(this).attr("type") != "button"){
+            $(this).attr("value", "");
+        }
+    });
+    new_point.appendTo("#waypoint_section");
+};
+
+$(".waypoint_remove").live('click', function(){
+    console.log();
+    if ($(this).parent().parent().children().length >= 2){
+        $(this).parent().remove();
+    }    
+});
+
+</script>

@@ -1,0 +1,18 @@
+    
+<div id="LCD" title="LCD">
+
+  <label for="lcdOutput">Current Text </label>
+  <input id="lcdOutput" type="text" value="N/A" readonly="true" style="width:9em">
+
+</div>
+
+<script>
+
+  function updateMiniLCDOutput()
+  {
+    document.getElementById('lcdOutput').value = rosLCDOutput;
+  }
+
+  setInterval(function(){updateMiniLCDOutput()}, 200);
+
+</script>

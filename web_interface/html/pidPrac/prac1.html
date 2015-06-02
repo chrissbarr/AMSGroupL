@@ -1,0 +1,557 @@
+<html>
+  <head>
+    <meta content="text/html;charset=utf-8" http-equiv="Content-Type">
+    <meta content="utf-8" http-equiv="encoding">
+
+    <link href="/static/css/redmond/jquery-ui-1.10.0.custom.css" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="/static/css/mainstyle.css">
+    <link rel="stylesheet" type="text/css" href="/static/css/jsxgraph.css" />
+    <link rel="stylesheet" type="text/css" href="/static/css/style.css">
+
+    <script type="text/javascript" src="/scripts/jquery-latest.js"></script>
+    <script type="text/javascript" src="/scripts/jquery-ui-1.10.0.custom.js"></script>
+    <script type="text/javascript" src="/scripts/jsxgraphcore.js"></script>
+    <script type="text/javascript" src="/scripts/raphael-min.js"></script>
+    <script type="text/javascript" src="/scripts/g.raphael-min.js"></script>
+    <script type="text/javascript" src="/scripts/g.line-min.js"></script>
+    <script type="text/javascript" src="/scripts/layout_mods.js"></script>
+    <script type="text/javascript" src="/scripts/eventemitter2.min.js"></script>
+    <script type="text/javascript" src="/scripts/roslib.min.js"></script>
+    
+    <script type="text/javascript">
+      mobile =  /Android|webOS|iPhone|iPad|iPod|BlackBerry/i.test(navigator.userAgent);
+
+      // Page update frequency
+      updateHz = 10;
+
+      // Get Hostname
+      var hostname = 'null';
+      var $tmpDiv = $('<div>');
+      $tmpDiv.load('/html/hostname.php', function() 
+      {
+        hostname = $tmpDiv.html();
+        document.getElementById("hostname").innerHTML = hostname;
+
+        sub2Ros();
+        setInterval(function(){ updateRosVars() }, 1000/updateHz);
+      });
+
+      if(mobile)
+      {
+      
+      };
+    
+    </script>
+
+    <link rel="shortcut icon" href="/static/img/icon.png">
+  </head>
+
+  <body class="colourTxt colour2">
+    <div class="header colour1 colourTxtH">
+      <img src="/static/img/uniLogoTrans.png" alt="University of South Australia" height="60" width="200"> 
+      <h1 id="hostname" style="position:fixed; top:0px; left:250px;"></h1>
+      <div id="batteryMeter"><td>Battery % <input id="batLevel" type="text" value="N/A" readonly="true" class="dataReturn colour4" style="width:2em;"></div>
+      <div class="colourCtrls">
+        <!--<button onclick="colours(0)">Pretty</button> <br>
+        <button onclick="colours(1)">Pretty-er</button> <br>
+        <button onclick="colours(2)">Pretty-est</button>-->
+      </div>
+    </div>
+
+<!-- END OF STANDARD HEADER -->
+
+    <div id="prac1Container" class="container colour2">
+      <div class="pracInfo left colour3" style="padding: 0px;">
+        <h2 class="colour1 colourTxtH" id="pracTitle">Brinkleworth's Wild Ride!</h2>
+        <p class="pracBlurb" id="pracBlurb">
+          Failed to load practical blurb <br>
+        </p>
+        <div class="pracInstr colour4" id="stepBox">
+          Failed to load practical steps
+        </div>
+        <button onclick="changeStep(-1)">&lt;&lt; Prev</button>
+        <button onclick="changeStep(1)">Next &gt;&gt;</button>
+      </div>
+      
+      <div class="pracCtrls right colour3" style="padding: 0px;">
+        <div id="prac1Remote">
+          <h3 class="colourTxtH colour1">Remote</h3>
+          <div style="float:left;">
+            <input type="image" id="ctrlForward" src="/static/img/go-up.png" alt="Move Forward" class="arrow" onClick="drive(1);"><br>
+            <input type="image" id="ctrlStop" src="/static/img/process-stop.png" alt="Stop" class="arrow" onClick="drive(0);"><br>
+            <input type="image" id="ctrlReverse" src="/static/img/go-down.png" alt="Move Backward" class="arrow" onClick="drive(3);">
+          </div>
+          <div style="float:left; margin-top:3.2em; margin-left:0.75em;">
+            Speed(%): <input type="text" id="ctrlSpeed" value="20" class="dataInput">
+          </div>
+        </div>
+        
+        <div id="ctrlVars">
+          <h3 class="colourTxtH colour1">Control Variables</h3>
+          <form action="">
+            Control: <input type="radio" name="ctrl" value="1.0" onClick="ctrlToggle(1)">On
+            <input type="radio" name="ctrl" value="0.0" onClick="ctrlToggle(0)">Off
+          </form>
+          P: <input type="text" id="ctrlP" value="0.0" class="dataInput"> <br>
+          I: <input type="text" id="ctrlI" value="0.0" class="dataInput"> <br>
+          <button onclick="updateCtrls()" style="float:right">Submit</button>          
+        </div>
+        
+        <div id="results">
+          <h3 class="colourTxtH colour1">Outputs</h3>
+          <div style="float:left">
+            <table class="tblLayout" id="tblOutputs">
+              <tr>
+                <td> Robot Heading(dg): </td>
+                <td> <input id="outputHeading" type="text" value="N/A" readonly="true" class="dataReturn colour3"> </td>
+                <td> <button onclick="pauseUpdates = true;">Pause Updates</button> </td>
+                <td> <button onclick="pauseUpdates = false;">Start Updates</button> </td>
+              </tr>
+              <tr>
+                <td colspan=2 style="color:#2222ee; background:white"> <b>Left Motor</b> </td>
+                <td colspan=2 style="color:#ee2222; background:white"> <b>Right Motor</b> </td>
+              </tr>
+              <tr>
+                <td> Motor Signal: </td>
+                <td> <input id="motSpdL" type="text" value="N/A" readonly="true" class="dataReturn colour3"> </td>
+                <td> Motor Signal: </td>
+                <td> <input id="motSpdR" type="text" value="N/A" readonly="true" class="dataReturn colour3"> </td>
+              </tr>
+              <tr>
+                <td> Encoder Rate: </td>
+                <td> <input id="encRateL" type="text" value="N/A" readonly="true" class="dataReturn colour3"> </td>
+                <td> Encoder Rate: </td>
+                <td> <input id="encRateR" type="text" value="N/A" readonly="true" class="dataReturn colour3"> </td>
+              </tr>
+              <tr>
+                <td> Error: </td>
+                <td> <input id="motErrL" type="text" value="N/A" readonly="true" class="dataReturn colour3"> </td>
+                <td> Error: </td>
+                <td> <input id="motErrR" type="text" value="N/A" readonly="true" class="dataReturn colour3"> </td>
+              </tr>
+              <tr>
+                <td> Error @ Stable: </td>
+                <td> <input id="motErrStbL" type="text" value="N/A" readonly="true" class="dataReturn colour3"> </td>
+                <td> Error @ Stable: </td>
+                <td> <input id="motErrStbR" type="text" value="N/A" readonly="true" class="dataReturn colour3"> </td>
+              </tr>
+              <tr>
+                <td> Overshoot: </td>
+                <td> <input id="motOvrL" type="text" value="N/A" readonly="true" class="dataReturn colour3"> </td>
+                <td> Overshoot: </td>
+                <td> <input id="motOvrR" type="text" value="N/A" readonly="true" class="dataReturn colour3"> </td>
+              </tr>
+              <tr>
+                <td> Settling Time(ms): </td> <td> <input id="motStlL" type="text" value="N/A" readonly="true" class="dataReturn colour3"> </td> <td> Settling Time(ms): </td> <td> <input id="motStlR" type="text" value="N/A" readonly="true" class="dataReturn colour3"> </td> </tr> </table>
+          </div>
+        </div>
+        
+        <div id="graphs">
+          <h3 class="colourTxtH colour1">Step Response</h3>
+          <div class="raphael" id="g.raphael.dmitry.baranovskiy.com" style="width:29em; height:15em; margin:0.5em; background:#FFFFFF; padding-bottom:15px;">   
+            <div id="graphHolder" style="width:100%; height:100%;"></div>
+          </div>    
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
+
+<script type="text/javascript" src="/scripts/ros_bridge.js"></script>
+<script type="text/javascript">
+  var motFactor = 40;
+  var encFactor = 2;
+  var remDrvForward = 0;
+  var remDrvReverse = 1;
+
+  // Stability system config variables
+  var unstableRange = 0.5;
+  var stableRange = 0.5;
+  var stableTime = 25;
+  var stableSubSet = 4;
+   
+  var pauseUpdates = false;
+  var ctrlP = 0.0;
+  var ctrlI = 0.0;
+  var ctrlD = 0.0;
+  var tempControl = 1.0;
+  var ctrlControl = 1.0;
+  var ctrlSpeed = 0;
+  var ctrlSpeedPrev = 0;
+  var counter = 0;
+  var prevEncRateL = 0;
+  var prevEncRateR = 0;
+  
+  var motErrL = 0;
+  var motErrStbL = 0;
+  var motOvrL = 0;
+  var motStlL = 0;
+  var motErrR = 0;
+  var motErrStbR = 0;
+  var motOvrR = 0;
+  var motStlR = 0;
+
+  var motOvrSchL = false;
+  var motStbL = 0; //0 = Not searching, 1 = Searching for start, 2 = Searching for stable
+  var motStbCntL = 0;
+  var encRateStbPointL = 0;
+  var timeStartL = 0;
+  var timeEndL = 0;
+  
+  var motOvrSchR = false;
+  var motStbR = 0; //0 = Not searching, 1 = Searching for start, 2 = Searching for stable
+  var motStbCntR = 0;
+  var encRateStbPointR = 0;
+  var timeStartR = 0;
+  var timeEndR = 0;
+  
+  var sum1 = 0;
+  var sum2 = 0;
+  var stableBufferAmpL = [0];
+  var stableBufferTimeL = [0];
+  var stableBufferAmpR = [0];
+  var stableBufferTimeR = [0];
+
+  var holder
+  var x = []; var lnSetPoint = []; var lnStb = [];
+  var chart
+  
+  for (var i = 0; i < 250; i++)
+  {
+    x[i] = i;
+  }
+  
+  for(var i = 0; i < stableTime; i++)
+  {
+    stableBufferAmpL.push(ctrlSpeed);
+    stableBufferAmpR.push(ctrlSpeed);
+  }
+
+  for(var i = 0; i < stableTime; i++)
+  {
+    date = new Date();
+    stableBufferTimeL.push(date.getTime());
+    stableBufferTimeR.push(date.getTime());
+  }
+  
+    
+  // Remote control
+  function drive(direction)
+  {
+    // Record the previous ctrlSpeed for step response
+    ctrlSpeedPrev = ctrlSpeed;
+  
+    ctrlSpeed = parseInt(document.getElementById('ctrlSpeed').value) * encFactor;
+    
+    if (ctrlControl == 0.0)
+    {
+      tmpCtrlSpeed = ctrlSpeed * 2.55;
+    }
+    else
+    {
+      tmpCtrlSpeed = ctrlSpeed;
+    }
+   
+    switch(direction)
+    {
+      case 0:
+        // Stop
+        data = [2, 0, 0, 0];
+        ctrlSpeed = 0;
+        motOvrSchL = false;
+        motOvrSchR = false;
+        motStbL = 0;
+        motStbR = 0;
+        break;
+      case 1:
+        // Forward
+        data = [remDrvForward, tmpCtrlSpeed, 0, 0];
+        motOvrSchL = true;
+        motOvrSchR = true;
+        motOvrL = 0
+        motOvrR = 0
+        motStlL = 0;
+        motStlR = 0;
+        motStbL = 1;
+        motStbR = 1;
+        break;
+      case 3:
+        // Reverse
+        data = [remDrvReverse, tmpCtrlSpeed, 0, 0];
+        break;
+    }    
+    sendRosMessage("/"+hostname+"/set/motor_drive", "std_msgs/UInt8MultiArray", data);
+  }
+  
+  // Update Control Vars
+  function updateCtrls()
+  {
+    ctrlP = parseFloat(document.getElementById('ctrlP').value);
+    ctrlI = parseFloat(document.getElementById('ctrlI').value);
+    ctrlD = parseFloat(0);
+    ctrlControl = tempControl;
+    data = [ctrlControl, ctrlP, ctrlI, ctrlD, 1.0];
+    sendRosMessage("/"+hostname+"/set/motor_control", "std_msgs/Float32MultiArray", data);
+  }
+  
+  // Handle the control on/off radio buttons
+  function ctrlToggle(toggler)
+  {
+    if (toggler)
+    {
+      document.getElementById('ctrlP').disabled = false;
+      document.getElementById('ctrlI').disabled = false;
+      tempControl = 1;
+    }
+    else
+    {
+      document.getElementById('ctrlP').disabled = true;
+      document.getElementById('ctrlI').disabled = true;
+      tempControl = 0;
+    }
+  }
+  
+  function updateOutputs()
+  {
+    if (pauseUpdates == false)
+    {
+      document.getElementById('motSpdL').value = parseInt(rosMotSpdL / motFactor);
+      document.getElementById('motSpdR').value = parseInt(rosMotSpdR / motFactor);
+      document.getElementById('encRateL').value = (rosEncRateL / encFactor).toFixed(0);
+      document.getElementById('encRateR').value = (rosEncRateR / encFactor).toFixed(0);
+      document.getElementById('outputHeading').value = rosPoseHeading;
+
+      document.getElementById('motErrL').value = motErrL / encFactor;
+      document.getElementById('motErrStbL').value = (motErrStbL / encFactor).toFixed(1);
+      document.getElementById('motOvrL').value = motOvrL / encFactor;
+      document.getElementById('motStlL').value = motStlL / encFactor;
+      document.getElementById('motErrR').value = motErrR / encFactor;
+      document.getElementById('motErrStbR').value = (motErrStbR / encFactor).toFixed(1);
+      document.getElementById('motOvrR').value = motOvrR / encFactor;
+      document.getElementById('motStlR').value = motStlR / encFactor;      
+    }
+  }
+
+  function updateBatteryLevel()
+  {
+    document.getElementById('batLevel').value = rosBatteryLevel;
+  }
+  
+  function calcErrors()
+  {
+    // Update Buffer ----------------------------------------------------------
+    
+    //Check that ros has started up
+    if (rosEncRateL != null)
+    {
+      stableBufferAmpL.shift();
+      stableBufferAmpR.shift();
+      stableBufferTimeL.shift();
+      stableBufferTimeR.shift();
+    
+      stableBufferAmpL.push(Math.abs(rosEncRateL));
+      stableBufferAmpR.push(Math.abs(rosEncRateR));
+      date = new Date();
+      stableBufferTimeL.push(date.getTime());
+      stableBufferTimeR.push(date.getTime());
+    }
+    
+    // Determine raw error ----------------------------------------------------
+    motErrL = Math.abs(rosEncRateL) - ctrlSpeed;
+    motErrR = Math.abs(rosEncRateR) - ctrlSpeed;
+    
+    // Find peak --------------------------------------------------------------
+    // Use max error by searching the motor buffer array
+    motMaxErrL = Math.max.apply(Math, graphBufferL) - ctrlSpeed;
+    motMaxErrR = Math.max.apply(Math, graphBufferR) - ctrlSpeed;
+
+    if (motOvrSchL) // If we still haven't found the overshoot...
+    {
+      if (motMaxErrL > motOvrL) // Is the current overshoot greater than the previous?
+      {
+        motOvrL = motMaxErrL;
+      }
+      else if (motOvrL != 0)
+      {
+        motOvrSchL = false;
+      }
+    }
+    
+    if (motOvrSchR) // If we still haven't found the overshoot...
+    {
+      if (motMaxErrR > motOvrR) // Is the current overshoot greater than the previous?
+      {
+        motOvrR = motMaxErrR;
+      }
+      else if (motOvrR != 0)
+      {
+        motOvrSchR = false;
+      }
+    }
+    
+    // Find Settling Time -----------------------------------------------------
+    // Find gradient for Left motor
+    // Use only the new higher resolution buffer
+    if (motStbL == 2) // If searching for stability point
+    {
+      motStbL = 1
+      timeStartL = 0;
+    }
+    graphBufferLTemp = graphBufferL;
+    for(var j = 0; j < (graphBufferLTemp.length/stableSubSet)-stableSubSet; j++)
+    {
+      subArray1 = graphBufferLTemp.slice(j * stableSubSet, (j + 1) * stableSubSet);
+      subArray2 = graphBufferLTemp.slice((j + 1) * stableSubSet, (j + 2) * stableSubSet);
+      subArray3 = graphBufferLTemp.slice((j + 2) * stableSubSet, (j + 3) * stableSubSet);
+    
+      sum1 = 0;
+      sum2 = 0;
+      sum3 = 0;
+      for(var i = 0; i < stableSubSet; i++)
+      {
+        sum1 = sum1 + subArray1[i];
+        sum2 = sum2 + subArray2[i];
+      }
+      for(var i = 0; i < subArray3.length; i++)
+      {
+        sum3 = sum3 + subArray3[i];
+      }
+
+      submean1 = sum1 / subArray1.length;
+      submean2 = sum2 / subArray2.length;  
+      submean3 = sum3 / subArray3.length;  
+
+      gradL = submean1 - submean2;
+      gradMidL = submean1 - submean3;
+    
+      //Find rise
+      if (motStbL == 1)
+      {
+        if (gradL >= unstableRange || gradL <= (unstableRange * -1)) //If gradient is outside stable range
+        {
+          timeStartL = j * stableSubSet;
+          motStbL = 2;
+        }
+      }
+
+      //Find stability
+      if (motStbL == 2) // If searching for stability point
+      {
+        if ( (j * stableSubSet) > timeStartL && submean2 > (ctrlSpeed * 0.25) && (gradL <= stableRange && gradL >= (stableRange * -1)) && (gradMidL <= stableRange/2 && gradMidL >= (stableRange * -0.5)))
+        { 
+          // Update variable
+          motStlL = (j * stableSubSet - timeStartL) * 20;
+          motErrStbL = submean2 - ctrlSpeed;
+          console.log(motStlL + " = (" + j * stableSubSet + " - " + timeStartL + ") * 20");
+          motStbL = 0
+        } 
+      } 
+    }
+    
+
+    // Find gradient for Right motor
+    // Use only the new higher resolution buffer
+    if (motStbR == 2) // If searching for stability point
+    {
+      motStbR = 1
+      timeStartR = 0;
+    }
+    graphBufferRTemp = graphBufferR;
+    for(var j = 0; j < (graphBufferRTemp.length/stableSubSet)-stableSubSet; j++)
+    {
+      subArray1 = graphBufferRTemp.slice(j * stableSubSet, (j + 1) * stableSubSet);
+      subArray2 = graphBufferRTemp.slice((j + 1) * stableSubSet, (j + 2) * stableSubSet);
+      subArray3 = graphBufferRTemp.slice((j + 2) * stableSubSet, (j + 3) * stableSubSet);
+    
+      sum1 = 0;
+      sum2 = 0;
+      sum3 = 0;
+      for(var i = 0; i < stableSubSet; i++)
+      {
+        sum1 = sum1 + subArray1[i];
+        sum2 = sum2 + subArray2[i];
+      }
+      for(var i = 0; i < subArray3.length; i++)
+      {
+        sum3 = sum3 + subArray3[i];
+      }
+
+      submean1 = sum1 / subArray1.length;
+      submean2 = sum2 / subArray2.length;  
+      submean3 = sum3 / subArray3.length;  
+
+      gradR = submean1 - submean2;
+      gradMidR = submean1 - submean3;
+    
+      //Find rise
+      if (motStbR == 1)
+      {
+        if (gradR >= unstableRange || gradR <= (unstableRange * -1)) //If gradient is outside stable range
+        {
+          timeStartR = j * stableSubSet;
+          motStbR = 2;
+        }
+      }
+
+      //Find stability
+      if (motStbR == 2) // If searching for stability point
+      {
+        if ( (j * stableSubSet) > timeStartR && submean2 > (ctrlSpeed * 0.25) && (gradR <= stableRange && gradR >= (stableRange * -1)) && (gradMidR <= stableRange/2 && gradMidR >= (stableRange * -0.5)))
+        { 
+          // Update variable
+          motStlR = (j * stableSubSet - timeStartR) * 20;
+          motErrStbR = submean2 - ctrlSpeed;
+          console.log(motStlR + " = (" + j * stableSubSet + " - " + timeStartR + ") * 20");
+
+          motStbR = 0
+        } 
+      } 
+    }
+  }
+      
+  function updateGraphs()
+  {
+    if (pauseUpdates == false)
+    {
+      // Prep values for display
+      var graphBufferLAdj = graphBufferL;
+      var graphBufferRAdj = graphBufferR;
+
+      //Setup other lines
+      for (var i = 0; i < graphBufferL.length; i++)
+      {
+        lnSetPoint[i] = ctrlSpeed / encFactor;
+        lnStb[i] = 0;
+        graphBufferLAdj[i] = graphBufferL[i] / encFactor;
+        graphBufferRAdj[i] = graphBufferR[i] / encFactor;
+      }
+      //lnStb[graphBufferL.length - stableSubSet] = 100
+      //lnStb[graphBufferL.length - 2*stableSubSet] = 100
+      //lnStb[graphBufferL.length - 3*stableSubSet] = 100
+
+      // Clear the previous graph
+      chart.remove();
+
+      // Draw step response
+      chart = holder.linechart(15, 0, 450, 240, x, [lnSetPoint, lnStb, graphBufferLAdj, graphBufferRAdj, 100], {axis:'0 0 1 1', axisystep:10});
+      // Colour Lines
+      chart.lines[0].attr({'stroke': '#777777'});
+      chart.lines[1].attr({'stroke': '#000000'}); 
+      chart.lines[2].attr({'stroke': '#7777DD'});
+      chart.lines[3].attr({'stroke': '#DD7777'});
+    }
+  }
+
+  var holder = Raphael("graphHolder", 500, 500)//, txtattr = { font: "12px sans-serif" };
+  var chart = holder.rect(20,30,100,12).attr({fill: "orange"});
+  //var chart = holder.linechart(15, 0, 450, 240, [0, 10], [0, 10], {axis:'0 0 0 1', axisystep:10});
+
+  setInterval(function(){updateGraphs()}, 1000/updateHz);
+  setInterval(function(){calcErrors()}, 1000/updateHz);
+  setInterval(function(){updateOutputs()}, 1000/updateHz);
+  setInterval(function(){updateBatteryLevel()}, 1000);
+
+
+</script>
+
+<script type="text/javascript" src="/html/pidPrac/prac-steps.js"></script>

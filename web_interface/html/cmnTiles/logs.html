@@ -1,0 +1,64 @@
+<div id="Logger" title="Log Recorder">
+  <input type="button" id="resume_log" value="Start Logger" onclick="resume_logger();"></button>
+  <input type="button" id="pause_log" value="Stop Logger" onclick="pause_logger();"></button><br>
+  <input type="button" id="dump_log" value="Dump Log to CSV" onclick="dump_logs();"></button>
+  <input type="button" id="delete_log" value="Delete Logs" onclick="delete_logs();"></button>
+  <div id="logs"></div>
+</div>
+
+<script type="text/javascript">
+  function getLogs(){
+      $.ajax({
+          url: "get_logs",
+          type: "GET",
+          dataType: "json",
+          success: getLogs_success,
+        });    
+    };
+
+    function getLogs_success(data){
+        $.each(data, function(counter, data_itr){
+            div_id = replace_slashes(data_itr).replace('.', '_');
+            if ($("#" + div_id).length == 0){
+                download_link = "/roslog/" + data_itr;
+                div_data = "<div id='" + div_id + "' class='log_download'><a href='" + download_link + "'>" + data_itr + "</div>";
+                $("#logs").append(div_data);
+            }
+        });
+    };
+    
+    function dump_logs(){
+        sendRosMessage("/" + hostname + "/command/roslog", "std_msgs/String", "DUMP");
+
+        setTimeout(function(){
+            getLogs();
+        }, 1000);
+        setTimeout(function(){
+            getLogs();
+
+        }, 10000);
+
+    }
+    
+    function delete_logs(){
+        if(confirm('Are you sure you wish to delete *all* logs??')){
+            sendRosMessage("/" + hostname + "/command/roslog", "std_msgs/String", "DELETE");
+            setInterval(function(){
+                location.reload();
+            }, 100);
+        }
+    }
+
+    function pause_logger(){
+        sendRosMessage("/" + hostname + "/command/roslog", "std_msgs/String", "PAUSE");
+    }
+
+    function resume_logger(){
+        sendRosMessage("/" + hostname + "/command/roslog", "std_msgs/String", "RESUME");
+    }
+
+    $(document).ready(function() {    
+        getLogs();
+        
+    });    
+</script>

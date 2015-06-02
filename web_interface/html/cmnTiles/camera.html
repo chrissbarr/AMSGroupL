@@ -1,0 +1,135 @@
+<div id="camera" class="standard_dialog" title="Webcam">
+
+   &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+  Filter: 
+  <!--<select id="camera_0_set_filter">
+    <option value="None" selected>None</option>
+  </select> -->
+  
+  Resolution: 
+  <select id="camera_0_set_res">
+    <option value=1 >320x240</option>
+    <option value=2 selected="selected">432x240</option>
+    <option value=3 >640x480</option>
+
+    <!-- The res is common between viewers so it's hard to say what we start on -->
+  </select>
+  Framerate: 
+  <select id="camera_0_set_max_fps" style="display: inline;">
+    <option value=15 >15</option>
+    <option value=20 >20</option>
+    <option value=25 selected="selected">25</option>
+    <option value=30 >30</option>
+    <!-- The framerate is common between viewers so it's hard to say what we start on -->
+  </select>
+
+
+<!--  <div id="webcam"></div>
+      <input id="webcam_image_spacer" type="image" class="WebcamSpacer" width="320" height="240" src="/static/img/spacer.png" alt="spacer"></input>
+</div>
+-->
+  <div id="mjpeg"></div>
+
+  <img id="camStream" width=640 height=356 > </img>
+
+</div>
+
+
+
+<script type="text/javascript" type="text/javascript">
+  //Start in Manual mode
+  sendRosMessage("/"+hostname+"/set/camera_resolution", "std_msgs/Int16MultiArray", [432, 240]);
+
+  var topic  = "/"+hostname+"/get/camera_stream"
+  var streamOp = "&quality=50&type=mjpeg"
+  var stream = "http://"+document.location.hostname+":8181/stream?topic="+topic+streamOp;
+  $('#camStream').attr( "src", stream);
+
+
+  $('#camera_0_set_max_fps').change(function(){
+      selValue = document.getElementById("camera_0_set_max_fps");
+      value = selValue.options[selValue.selectedIndex].value;
+      value = parseInt(value);
+      sendRosMessage('/'+hostname+'/set/camera_frame_rate', 'std_msgs/Int16', value);
+  });
+  
+  
+  $('#camera_0_set_res').change(function(){
+      selValue = document.getElementById("camera_0_set_res");
+      value = selValue.options[selValue.selectedIndex].value;
+      value = parseInt(value);
+      var res
+      if (value == 1)
+	{
+        	res = [320, 240];
+		$('#camStream').attr( "width", 640);
+		$('#camStream').attr( "height", 480);
+	}
+      else if (value == 2)
+	{        
+		res = [432, 240];
+		$('#camStream').attr( "width", 640);
+		$('#camStream').attr( "height", 360);
+	}
+      else if (value == 3)
+	{        
+		res = [640, 480];
+		$('#camStream').attr( "width", 640);
+		$('#camStream').attr( "height", 480);
+	}
+      sendRosMessage('/'+hostname+'/set/camera_resolution', 'std_msgs/Int16MultiArray', res );
+  });
+  
+/*  $(function()
+  {
+      get_camera_filters();
+      $("#webcam_image_spacer").attr("width", camera_width);
+      $("#webcam_image_spacer").attr("height", camera_height);
+      sendRosMessage('/${hostname}/command/camera_0_set_res', 'std_msgs/Int16', 2); //Set initial resolution to Low
+      sendRosMessage('/${hostname}/command/camera_0_set_fps', 'std_msgs/Int16', 5); //Set initial frame rate maximum to 5Hz
+      if(!mobile) {  //Disable the floating boxes
+          /* 
+          $("#camera").dialog({
+              width: camera_width + 45,
+              height: camera_height + 130,
+              resizable: false,
+              beforeClose: dialog_close,
+              position: {at: "right bottom"}
+          });
+
+        $("#camera").closed = true;  
+        }
+    
+  });
+
+*/
+
+/*
+
+function get_camera_filters(){
+    $.ajax({
+        url: "get_camera_functions",
+        type: "GET",
+        dataType: "json",
+        success: get_camera_filters_success,
+        error: get_camera_filters_error
+        //timeout: 1000
+    });
+};
+    
+function get_camera_filters_success(data){
+    $.each(data, function(id, itr_data){
+        $("#camera_0_set_filter").append('<option value="' + itr_data + '">'+ itr_data + '</option>');
+    });
+};
+
+function get_camera_filters_error(data){
+    alert("Error getting camera filters. Something is broken.");
+}
+
+
+*/
+
+
+
+</script>

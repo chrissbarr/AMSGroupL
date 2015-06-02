@@ -1,0 +1,75 @@
+<div id="IMU" title="IMU Data">
+  <table id="imuTable">
+    <tr>
+        <th>Accelerometer x-axis</th>
+        <td> <input id="outIMUAX" type="text" value="N/A" readonly="true" class="dataReturn colour3"> </td>
+        <th>Magnetometer x-axis</th>
+        <td> <input id="outIMUMX" type="text" value="N/A" readonly="true" class="dataReturn colour3"> </td>
+        <th>Gyroscope x-axis</th>
+        <td> <input id="outIMUGX" type="text" value="N/A" readonly="true" class="dataReturn colour3"> </td>
+    </tr>
+    <tr>
+        <th>Accelerometer y-axis</th>
+        <td> <input id="outIMUAY" type="text" value="N/A" readonly="true" class="dataReturn colour3"> </td>
+        <th>Magnetometer y-axis</th>
+        <td> <input id="outIMUMY" type="text" value="N/A" readonly="true" class="dataReturn colour3"> </td>
+        <th>Gyroscope y-axis</th>
+        <td> <input id="outIMUGY" type="text" value="N/A" readonly="true" class="dataReturn colour3"> </td>
+    </tr>
+    <tr>
+        <th>Accelerometer z-axis</th>
+        <td> <input id="outIMUAZ" type="text" value="N/A" readonly="true" class="dataReturn colour3"> </td>
+        <th>Magnetometer z-axis</th>
+        <td> <input id="outIMUMZ" type="text" value="N/A" readonly="true" class="dataReturn colour3"> </td>
+        <th>Gyroscope z-axis</th>
+        <td> <input id="outIMUGZ" type="text" value="N/A" readonly="true" class="dataReturn colour3"> </td>
+    </tr>
+  </table>
+</div>
+
+<script type="text/javascript">        
+
+  var imuMax;
+  var imuMin;
+  var decimalPlacesAcc = 3;
+  var decimalPlacesMag = 0;
+  var decimalPlacesGyro = 1;
+
+  function updateIMUOutputs()
+  {
+    if (typeof rosSnrIMU[0] == "undefined")
+    {
+        // Do nothing
+    }
+    else
+    {
+        // Determine which IMU data format we're using
+        imuMax = Math.max.apply(null, rosSnrIMU);
+        imuMin = Math.min.apply(null, rosSnrIMU);
+    
+        if (imuMax > 2 || imuMin < -2)
+        {
+            decimalPlaces = 0;
+        }
+        else
+        {
+            decimalPlaces = 2;
+        }
+
+        document.getElementById('outIMUAX').value = rosSnrIMU[0].toFixed(decimalPlacesAcc);
+        document.getElementById('outIMUAY').value = rosSnrIMU[1].toFixed(decimalPlacesAcc);
+        document.getElementById('outIMUAZ').value = rosSnrIMU[2].toFixed(decimalPlacesAcc);
+
+        document.getElementById('outIMUMX').value = rosSnrIMU[3].toFixed(decimalPlacesMag);
+        document.getElementById('outIMUMY').value = rosSnrIMU[4].toFixed(decimalPlacesMag);
+        document.getElementById('outIMUMZ').value = rosSnrIMU[5].toFixed(decimalPlacesMag);
+
+        document.getElementById('outIMUGX').value = rosSnrIMU[6].toFixed(decimalPlacesGyro);
+        document.getElementById('outIMUGY').value = rosSnrIMU[7].toFixed(decimalPlacesGyro);
+        document.getElementById('outIMUGZ').value = rosSnrIMU[8].toFixed(decimalPlacesGyro);
+    }
+  }
+
+  setInterval(function(){updateIMUOutputs()}, 1000/updateHz);
+
+</script>

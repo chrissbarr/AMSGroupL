@@ -1,0 +1,82 @@
+<div id="Arm_Servo" title="Arm Servo">
+  <div white-space="nowrap">
+    <table class="tblHiddenLayout">
+      <tr>
+        <td>Gripper:</td>
+        <td> <input type="text" id="servo_0" value="1000"> </td>
+        <td> <input type="button" value="Open" onclick="ctrlGripper('open');"/> </td>
+        <td> <input type="button" value="Close" onclick="ctrlGripper('close');"/> </td>
+      </tr>
+      <tr>
+        <td>Arm:</td>
+        <td> <input type="text" id="servo_1" value="2300"> </td>
+        <td> <input type="button" value="Up" onclick="ctrlArm('up');"/> </td>
+        <td> <input type="button" value="Down" onclick="ctrlArm('down');"/> </td>
+      </tr>
+      <tr>
+        <td style="text-align: right;" colspan=4> <button id="Arm_Servo_Set">Set</button> </td>
+      </tr>
+    </table>
+  </div>
+</div>
+
+<script type="text/javascript">
+  // Preset positions for open/close, up/down buttons
+  var gOpen = 1000;
+  var gClose = 1700;
+  var aUp = 550;
+  var aDown = 2300;
+
+  // Open / Close the gripper
+  function ctrlGripper(gripperState)
+  {
+    if (gripperState == 'open')
+    {
+      val = gOpen;
+    }
+    else
+    {
+      val = gClose;
+    }
+  
+    servo0 = val;
+    document.getElementById("servo_0").value = val;
+    servo1 = parseInt($('#servo_1').val());
+   
+    data = [servo0, servo1];
+    sendRosMessage("/"+hostname+"/set/servo_drive", "std_msgs/Int32MultiArray", data); 
+  }
+
+  // Raise / lower the arm
+  function ctrlArm(armState)
+  {
+    if (armState == 'up')
+    {
+      val = aUp;
+    }
+    else
+    {
+      val = aDown;
+    }
+  
+    servo0 = parseInt($('#servo_0').val());
+    servo1 = val;
+    document.getElementById("servo_1").value = val;
+   
+    data = [servo0, servo1];
+    sendRosMessage("/"+hostname+"/set/servo_drive", "std_msgs/Int32MultiArray", data); 
+  }
+
+  $("#Arm_Servo_Set").click(function () {
+    servo0 = parseInt($('#servo_0').val());
+    servo1 = parseInt($('#servo_1').val());
+    if (servo0 < 700 || servo0 > 1900 || servo1 < 550 || servo1 > 2350)  {
+      alert("Servo ranges are: Gripper (700, 1900) and Arm (550,2350). This is to prevent damage to the hardware");
+      return;
+    }
+    data = [servo0, servo1];
+    
+    sendRosMessage("/"+hostname+"/set/servo_drive", "std_msgs/Int32MultiArray", data);
+  });
+
+</script>

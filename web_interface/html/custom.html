@@ -1,0 +1,154 @@
+
+<html>
+<head>
+  <link href="/static/css/redmond/jquery-ui-1.10.0.custom.css" rel="stylesheet">
+  <link rel="stylesheet" type="text/css" href="/static/css/mainstyle.css">
+  <link rel="stylesheet" type="text/css" href="/static/css/jsxgraph.css" />
+  <link rel="stylesheet" type="text/css" href="/static/css/style.css">
+  <script src="/scripts/jquery-latest.js"></script>
+  <script src="/scripts/jquery-ui-1.10.0.custom.js"></script>
+  <script type="text/javascript" src="/scripts/jsxgraphcore.js"></script>
+  <script type="text/javascript" src="/scripts/raphael-min.js"></script>
+  <script type="text/javascript">
+    // The hostname line is set by the mako/python/cherrypy engine *not* jQuery...
+    var hostname = "${hostname}";
+    mobile =  /Android|webOS|iPhone|iPad|iPod|BlackBerry/i.test(navigator.userAgent);
+    camera_width = 640;
+    camera_height = 480;
+    var LowBattery;
+    $(document).ready(function() {
+       if (!mobile){
+             $('.MobileOnly',this).hide();
+        };
+
+        
+
+        getMessages_Framerate = 5; // Times-per-second we should update the framerate
+        gettingMessages = true; // When false, we do not get messages...
+     
+
+        setInterval(function(){
+            createImageLayer(0);
+        }, 1000 / 5);
+
+        setInterval(function(){
+	    getMessages()
+        }, 1000 / getMessages_Framerate);
+    
+
+        getMessages();
+        createImageLayer(0);
+
+        if(mobile) {
+            $( "#roslog" ).dialog({
+                resizable: false,
+                beforeClose: dialog_close
+            });
+        }
+        $( "#lowBattery").dialog({
+            autoOpen: false,
+            modal: true,
+    });
+  });
+
+
+    </script>
+    <script src="/scripts/ros_communicator.js"></script>
+    <script src="/scripts/layout_mods.js"></script>
+  </head>
+
+  <body>
+    <h1> Template Interface </h1>
+    <div>
+      <h4> Output text field example </h4>
+      <!--
+        Create a text input element on the page
+        Give it the unique ID "batLevel"
+        Set the default value to "N/A"
+        Set to read only, effectively making it an output
+      -->
+      Battery(%) <input id="batLevel" type="text" value="N/A" readonly="true">
+    </div>
+
+    <div> <br><br>
+      <h4> Read text field & function button example </h4>
+      <!--
+      Create text input element on the page
+      Give it the unique ID "readTest"
+      Set the default value to "N/A"
+      -->
+      <input type="text" id="readTest" value="1000">
+      <!--
+      Create an input button element on the page
+      Give it the label "Read Text Field"
+      When clicked, run the function "readFieldTest()" once
+      -->
+      <input type="button" value="Read Text Field" onclick="readFieldTest();"/>
+    </div>
+
+    <div> <br><br>
+      <h4> ROS publisher example </h4>
+      Speed <input type="text" id="txtSpeed" value="100">
+      Direction <input type="text" id="txtDirection" value="0">
+      <input type="button" value="Publish to ROS" onclick="rosPublishTest();"/> <br>
+      Note: Direction can be a value from 0 - 3, each integer represents a different direction
+    </div>
+
+    <div> <br><br>
+      <h4> ROS Topic Dumpzone </h4>
+        <!-- Ros topics not otherwise displayed will automatically have outputs created, and displayed in any div with the id "dumpzone" -->
+        <div id="dumpzone"></div>
+    </div>
+
+  </body>
+</html>
+
+<script>
+
+  // Update the datafields on the page with values from the ROS topics
+  function updateCustomOutputs()
+  {
+    // Select the html input element by it's unique ID and assign it a new value
+    document.getElementById('batLevel').value = rosBatteryLevel;
+  }
+
+  // Run the "updateCustomOutputs" function, every 500ms
+  setInterval(function(){updateCustomOutputs()}, 500);
+
+
+
+  // Read the value within a textfield, and display as an alert
+  function readFieldTest()
+  {
+    // Declare the variable "tempTxt"
+    var tempTxt;
+    // Pull the current value from the field with ID "readTest" and assign it to the variable "tempTxt"
+    tempTxt = document.getElementById('readTest').value;
+    // Display the alert box to the user
+    alert(tempTxt);
+  }
+
+  function rosPublishTest()
+  {
+    // Declare variables
+    var speed; 
+    var direction; 
+
+    // Declare the ROS topic definitions as strings
+      // The value of "${hostname}" will be replaced with the mechbot's actual host name before the html data is passed to the user
+    var rosTopic = "/${hostname}/command/Motor_Drive";
+    var rosTopicType = "std_msgs/UInt8MultiArray";
+    
+    // Assign values to variables from the input boxes
+    speed = document.getElementById('txtSpeed').value;
+    direction = document.getElementById('txtDirection').value;
+
+    // Build the data array required by ROS
+    var data = [remDrvForward, speed, 0, 0];
+    
+    // Publish the prepared topic
+    sendRosMessage(rosTopic, rosTopicType, data);
+  }
+
+    
+</script>

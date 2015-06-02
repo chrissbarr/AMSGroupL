@@ -1,0 +1,129 @@
+<div id="Remote" title="Remote">
+  <div class="MobileOnly">
+    <hr></hr>
+  </div>
+  <div style="float: left;">
+    <table class="tblHiddenLayout">
+      <tr>
+        <td></td>
+        <td>
+          <input type="image" id="motor_forward" src="/static/img/go-up.png" alt="Move Forward" class="Arrow">
+        </td>
+        <td></td>
+      </tr>
+      <tr>
+        <td>
+          <input type="image" id="motor_left" src="/static/img/gtk-redo-ltr_rotate_90_flip.png" alt="Rotate Counter-clockwise" class="Arrow">
+        </td>
+        <td>
+          <input type="image" id="motor_stop" src="/static/img/process-stop.png" alt="Stop" class="Arrow">
+        </td>
+        <td>
+          <input type="image" id="motor_right" src="/static/img/gtk-redo-ltr_rotate_90.png" alt="Rotate Clockwise" class="Arrow">
+        </td>
+      </tr>
+      <tr>
+        <td></td>
+        <td>
+           <input type="image" id="motor_backward" src="/static/img/go-down.png" alt="Move Backward" class="Arrow">
+        </td>
+        <td></td>
+      </tr>
+    </table>
+  </div>
+
+  <div style="float: left;">
+    Speed: <input type="text" id="motor_speed" value="20">
+  </div>
+</div>
+
+<script>
+$(function(){
+  if(!mobile) {  //Disable the floating boxes
+/*
+    $("#Remote").dialog({
+        resizable: false,
+        beforeClose: dialog_close
+    });
+    */
+    };
+});
+
+  // Wait until rosscommunicator has loaded
+  while (typeof hardwareVersion == "undefined")
+  {
+    // Wait
+  }
+
+  var remMotFactor;
+
+  if (hardwareVersion == 1)
+  {
+    remMotFactor = 1;
+    remDrvForward = 2;
+    remDrvReverse = 3;
+    remDrvRight = 0;
+    remDrvLeft = 1;
+  }
+  else if (hardwareVersion == 2)
+  {
+    remMotFactor = 2;
+    remDrvForward = 0;
+    remDrvReverse = 1;
+    remDrvRight = 2;
+    remDrvLeft = 3;
+  }
+
+function get_speed(){
+    var speed = $('#motor_speed').val();
+    speed = parseInt(speed) * remMotFactor;
+    return speed;
+};
+
+$("#motor_forward").click(function () {
+  if (ctrlMode[0] == 0) //If not in auto mode
+  {
+    speed = get_speed() ;
+    data = [remDrvForward, speed, 0, 0];
+    sendRosMessage("/${hostname}/command/Motor_Drive", "std_msgs/UInt8MultiArray", data);
+  }
+});
+
+$("#motor_backward").click(function () {
+  if (ctrlMode[0] == 0)
+  {  
+    speed = get_speed();
+    data = [remDrvReverse, speed, 0 , 0];
+    sendRosMessage("/${hostname}/command/Motor_Drive", "std_msgs/UInt8MultiArray", data);
+  }
+});
+
+
+$("#motor_right").click(function () {
+  if (ctrlMode[0] == 0)
+  {  
+    speed = get_speed();
+    data = [remDrvRight, speed, 0, 0];
+    sendRosMessage("/${hostname}/command/Motor_Drive", "std_msgs/UInt8MultiArray", data);
+  }
+});
+
+
+$("#motor_left").click(function () {
+   if (ctrlMode[0] == 0)
+  {
+    speed = get_speed();
+    data = [remDrvLeft, speed, 0, 0];
+    sendRosMessage("/${hostname}/command/Motor_Drive", "std_msgs/UInt8MultiArray", data);
+  }
+});
+
+$("#motor_stop").click(function () {
+  if (ctrlMode[0] == 0)
+  {
+    data = [2, 0, 0, 0];
+    sendRosMessage("/${hostname}/command/Motor_Drive", "std_msgs/UInt8MultiArray", data);
+  }
+});
+
+</script>

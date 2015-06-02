@@ -33,13 +33,13 @@ import socket
 import rospy
 import std_msgs.msg
 
-motor_command_list = [[0, 50, 50, 10]]
+motor_command_list = [[0, 15, 15, 5]]
 # Variable is in the form [direction, left speed, right speed, time] with any number of elements so different motor commands can be queued up
 # Direction: 0 = straight, 1 = reverse, 2 = clock-wise, 3 = counter-clock-wise
 # Left / Right Speed: how fast the motors should turn. Max of 255
 # Time: is the time (in seconds) to to the defined task. The resolution is 0.01s.
 
-motor_data = std_msgs.msg.UInt8MultiArray() # definitions in std_msgs.msg - data to be published need to be in ROS format
+motor_data = std_msgs.msg.Int32MultiArray() # definitions in std_msgs.msg - data to be published need to be in ROS format
 motor_data.data = [1, 75, 25, 1] # actual data to be sent to the drive control on the MechBot
 # variable is in the form [direction, left speed, right speed, independant control]
 # Direction: 0 = straight, 1 = reverse, 2 = clock-wise, 3 = counter-clock-wise
@@ -50,7 +50,7 @@ motor_data.data = [1, 75, 25, 1] # actual data to be sent to the drive control o
 
 rospy.init_node("motor_drive_test", anonymous=False) # name the script on the ROS network
 
-pub = rospy.Publisher("/%s/set/motor_drive" % socket.gethostname(), std_msgs.msg.UInt8MultiArray, queue_size=10) # sets up the topic for publishing the motor commands
+pub = rospy.Publisher("/%s/set/motor_drive2" % socket.gethostname(), std_msgs.msg.Int32MultiArray, queue_size=10) # sets up the topic for publishing the motor commands
 
 time.sleep(0.2) # make sure publisher setup
 
@@ -71,7 +71,7 @@ def publish_motor_command(exit_loop): # subroutine
 
 if __name__ == '__main__': # main loop
     try: # if no problems
-        time.sleep(5)
+        time.sleep(.2)
         publish_motor_command(False) # run subroutine, set exit_loop to false
         motor_data.data[1] = 0 # once all commands finished then stop the motors
         motor_data.data[2] = 0

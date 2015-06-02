@@ -1,0 +1,147 @@
+<html>
+  <head>
+    <meta content="text/html;charset=utf-8" http-equiv="Content-Type">
+    <meta content="utf-8" http-equiv="encoding">
+
+    <link href="/static/css/redmond/jquery-ui-1.10.0.custom.css" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="/static/css/mainstyle.css">
+    <link rel="stylesheet" type="text/css" href="/static/css/jsxgraph.css" />
+    <link rel="stylesheet" type="text/css" href="/static/css/style.css">
+
+    <script type="text/javascript" src="/scripts/jquery-latest.js"></script>
+    <script type="text/javascript" src="/scripts/jquery-ui-1.10.0.custom.js"></script>
+    <script type="text/javascript" src="/scripts/jsxgraphcore.js"></script>
+    <script type="text/javascript" src="/scripts/raphael-min.js"></script>
+    <script type="text/javascript" src="/scripts/layout_mods.js"></script>
+    <script type="text/javascript" src="/scripts/eventemitter2.min.js"></script>
+    <script type="text/javascript" src="/scripts/roslib.min.js"></script>
+    
+    <script type="text/javascript">
+      mobile =  /Android|webOS|iPhone|iPad|iPod|BlackBerry/i.test(navigator.userAgent);
+
+      // Page update frequency
+      updateHz = 10;
+
+      // Get Hostname
+      var hostname = 'null';
+      var $tmpDiv = $('<div>');
+      $tmpDiv.load('/html/hostname.php', function() 
+      {
+        hostname = $tmpDiv.html();
+        document.getElementById("hostname").innerHTML = hostname;
+
+        sub2Ros();
+        setInterval(function(){ updateRosVars() }, 1000/updateHz);
+        loadTiles();
+      });
+
+      if(mobile)
+      {
+      
+      };
+    
+    </script>
+
+    <link rel="shortcut icon" href="/static/img/icon.png">
+  </head>
+
+  <body class="colourTxt colour2">
+    <div class="header colour1 colourTxtH">
+      <img src="/static/img/uniLogoTrans.png" alt="University of South Australia" height="60" width="200"> 
+      <h1 id="hostname" style="position:fixed; top:0px; left:250px;"></h1>
+      <div id="batteryMeter"><td>Battery % <input id="batLevel" type="text" value="N/A" readonly="true" class="dataReturn colour4" style="width:2em;"></div>
+      <div class="colourCtrls">
+        <!--<button onclick="colours(0)">Pretty</button> <br>
+        <button onclick="colours(1)">Pretty-er</button> <br>
+        <button onclick="colours(2)">Pretty-est</button>-->
+      </div>
+    </div>
+
+<!-- END OF STANDARD HEADER -->
+
+    <div id="stdContainer" class="container colour2">
+     
+      <div id="hardware" class="colour3">
+          <h3 class="colourTxtH colour1">Hardware</h3>
+          <div class = "body"> </div>
+      </div>
+
+      <div id="lcd" class="colour3">
+        <h3 class="colourTxtH colour1">LCD Screen</h3>
+        <div class = "body"> </div>
+      </div>
+      
+      <div id="remote" class="colour3">
+          <h3 class="colourTxtH colour1">Drive Control</h3>
+          <div class = "body"> </div>
+      </div>
+      
+      <div id="servo" class="colour3">
+          <h3 class="colourTxtH colour1">Arm Control</h3>
+          <div class = "body"> </div>
+      </div>
+
+      <div id="logs" class="colour3">
+          <h3 class="colourTxtH colour1"> :) </h3>
+          <div class = "body"> </div>
+      </div>
+      
+      <div id="sensors" class="colour3">
+          <h3 class="colourTxtH colour1">Sensor Feedback</h3>
+          <div class = "body"> </div>
+      </div>
+
+      <div id="camera" class="colour3">
+          <h3 class="colourTxtH colour1">Camera</h3>
+          <div class = "body"> </div>
+      </div>
+
+      <div id="waypoints" class="colour3">
+          <h3 class="colourTxtH colour1"> Waypoint Control</h3>
+          <div class = "body"> </div>
+      </div>
+
+      <div id="map" class="colour3">
+          <h3 class="colourTxtH colour1">Pathing Map</h3>
+          <div class = "body"> </div>
+      </div>
+
+      <div id="imu" class="colour3">
+          <h3 class="colourTxtH colour1">IMU Data</h3>
+          <div class = "body"> </div>
+      </div>
+
+      <div id="vicon" class="colour3">
+          <h3 class="colourTxtH colour1">Vicon Data</h3>
+          <div class = "body"> </div>
+      </div>
+
+    </div>  
+  </body>
+</html>
+
+<script type="text/javascript" src="/scripts/ros_bridge.js"></script>
+<script type="text/javascript">
+  function loadTiles()
+  {
+    // Populate the templated web page
+    $('#hardware .body').load('cmnTiles/hardware.html?n=1431');
+    $('#lcd .body').load('/html/cmnTiles/lcd.html?n=1');
+    $('#remote .body').load('/html/cmnTiles/remote.html?n=1');
+    $('#servo .body').load('/html/cmnTiles/servo.html?n=1');
+    //$('#logs .body').load('/html/cmnTiles/logs.html?n=1');
+    $('#sensors .body').load('/html/cmnTiles/sensors.html?n=1');
+    $('#camera .body').load('/html/cmnTiles/camera.html?n=2');
+    $('#waypoints .body').load('/html/cmnTiles/waypoints.html?n=8');
+    $('#map .body').load('/html/cmnTiles/map.html?n=2');
+    $('#imu .body').load('/html/cmnTiles/imu.html');
+    $('#vicon .body').load('/html/cmnTiles/vicon.html?');
+  }
+
+  function updateBatteryLevelOutput()
+  {
+    document.getElementById('batLevel').value = rosBatteryLevel;
+  }
+
+  setInterval(function(){updateBatteryLevelOutput()}, 1000);
+</script>

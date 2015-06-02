@@ -1,0 +1,37 @@
+<div id="LCD" title="LCD">
+  <form id="LCD_Form" > 
+    <textarea id="LCD_Text" class="LCD_Input" value="${hostname}" cols="15" rows="1" maxlength="16"></textarea>
+    <br />
+    <input type="button" id="LCD_Set" name="LCD_Set" value="Set">
+  </form>
+  <label for="lcdOutput">Current Text </label>
+  <input id="lcdOutput" type="text" value="N/A" readonly="true" style="width:9em">
+  <br><br>
+  <a onClick="return helpPopup('/html/hlpTiles/lcd_help.html')" href=html/hlpTiles/lcd_help.html>LCD codes help box</a>
+</div>
+
+<script type="text/javascript">
+  // Can't set this in HTML or CSS
+  $("#LCD_Text").height($("#LCD_Text").height()*2);
+
+  $("#LCD_Set").click(function ()
+  {
+    message = $("#LCD_Text").val();
+    sendRosMessage("/"+hostname+"/set/LCD_write", "std_msgs/String", message);
+        return false;
+  });
+
+  function helpPopup(url)
+  {
+    newwindow=window.open(url,'name','height=525,width=500');
+    if (window.focus) {newwindow.focus()}
+    return false;
+  }
+
+  function updateLCDOutput()
+  {
+    document.getElementById('lcdOutput').value = rosLCDOutput;
+  }
+  setInterval(function(){updateLCDOutput()}, 1000/updateHz);
+</script>
+

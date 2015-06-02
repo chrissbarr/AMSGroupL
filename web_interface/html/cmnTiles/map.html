@@ -1,0 +1,47 @@
+<div id="overhead_map" title="Map">
+  
+  <div id="box" class="jxgbox" style="width:97.5%; height:85%;"></div>
+  <input type="button" value="clear all" onClick="clearAll()"> 
+  
+</div>
+
+<script type="text/javascript">
+  function clearAll()
+  {
+    JXG.JSXGraph.freeBoard(board);
+    board = JXG.JSXGraph.initBoard('box', {boundingbox:[-1,6,8,-1], axis:true, grid:true});
+    return board;
+  }
+  
+  // Declare the graph object
+  var board = JXG.JSXGraph.initBoard('box', {boundingbox: [-1, 6, 8, -1], axis:true, grid:true});
+  clearAll();
+  
+  // Init the variables
+  var xPos = 0;//getPose().xAdj;
+  var yPos = 0;//getPose().yAdj;
+
+  //var posPrev = board.create('point',[xPos, yPos], {name:'',size:0});
+  var posCurr = board.create('point',[xPos, yPos], {name:'',size:1});
+  
+  // Add a new point and connect it to the previous one
+  function addPoint()
+  {
+    //	var xDiff = posPrev.X() - 
+    // We could implement a check to only create points if sufficient movement has occurred,
+    // Not sure if it would present any significant improvement to performance
+
+    // Create a dummy point at the previous location
+    // Used for drawing the line
+    //posPrev = board.create('point',[xPos, yPos], {name:'',size:0});
+    xPos = getPose().xAdj; // Read in current x coordinate
+    yPos = getPose().yAdj; // Read in current y coordinate
+    
+    posCurr = board.create('point',[xPos, yPos], {name:'',size:1}); // Create point at current position
+      // Draw an arrow between the last position and the current position
+      //board.create('line',[posPrev,posCurr], {straightFirst:false, straightLast:false, strokeWidth:2, dash:0, lastArrow:true, strokeColor:'#0000ff'});
+  }
+
+  // Add a new point every 1000 ms
+  setInterval(function(){addPoint()}, 1000);
+</script>

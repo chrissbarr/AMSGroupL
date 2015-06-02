@@ -1,0 +1,36 @@
+<html>
+<head>
+	<title>LCD Popup Help Document</title>
+<script language=javascript>
+<!--
+function DisplayCloseButton() {
+    if (window.opener != null) {
+		document.write('<form method="POST"><center><input type="button" name="CloseButton" value="Close" onclick="self.close()"></center></form>')
+	}
+}
+-->
+</script>
+</head>
+<body>
+	<center>
+	<b>LCD Popup Help Document</b>
+	</center>
+<hr>
+	In addition to being used to display messages on the LCD of the mechbot this control can also be used to send commands to the system. Care should be taken when sending commands as there is no conformation or way to reverse a command once sent.
+<br><br>
+    <table border="1" cellpadding="10px" id="imuTable"><tr>
+    <th><a name=JS1><b>Command</b></a></th> <td><b>Function</b></td></tr>
+    <td><i>REBOOT</i></td> <td>Restart the mechbot</td></tr>
+    <td><i>REQUEST IP</i></td> <td>Display the mechbot's IP address on the LCD</td></tr>
+    <td><i>RESET ROSSERIAL</i></td> <td>Restart the connection between the microcontroller and the main system</td></tr>
+    <td><i>SHUTDOWN</i></td> <td>Shutdown the mechbot</td></tr>
+    </table>
+<br>
+	<form method="POST">
+		<center>
+			<input type="button" name="CloseButton" value="Close" onclick="self.close()">
+		</center>
+	</form>
+
+</body>
+</html>

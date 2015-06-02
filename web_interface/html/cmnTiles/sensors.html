@@ -1,0 +1,415 @@
+<div id="robot_pictorial" title="robot_pictorial">
+  <div id="drawingRaphael"></div> 
+</div>
+
+<script type="text/javascript">
+  // Wait until rosscommunicator has loaded
+  while (typeof hardwareVersion == "undefined")
+  {
+    // Wait
+  }
+
+  var snrMotFactor;
+  snrMotFactor = 4000 / 4;
+
+  // Constants
+  usWidth = 10;
+  irColourOff = "White"
+  irColourOn = "#2E2"
+  usColourOff = "#EEE"
+  usColourOn = "#22E"
+  irRng1 = 150;
+  irRng2 = 300;
+  irRng3 = 450;
+  irRng4 = 600;
+  usRng1 = 10000;
+  usRng2 = 5000;
+  usRng3 = 3000;
+  usRng4 = 1000;
+  mot1 = "#F00";
+  mot2 = "#D00";
+  mot3 = "#A00";
+  mot4 = "#700";
+  mot5 = "#000";
+  mot6 = "#007";
+  mot7 = "#00A";
+  mot8 = "#00D";
+  mot9 = "#00F";
+  
+  // Create the drawing canvas
+  var paper = Raphael("drawingRaphael", 500, 500);
+  
+  // Robot
+  var circle = paper.circle(250, 250, 85);
+  circle.attr("fill", "#555")
+  circle.attr("stroke", "#000");
+  var wheelLeft = paper.rect(155, 220, 30, 60, 2);
+  var wheelRight = paper.rect(315, 220, 30, 60, 2);
+  wheelLeft.attr("fill", mot5);
+  wheelRight.attr("fill", mot5);
+  
+
+  // Create the IR sensors
+  var irL1 = paper.rect(50, 225, 20, 50, 2);
+  var irL2 = paper.rect(75, 225, 20, 50, 2);
+  var irL3 = paper.rect(100, 225, 20, 50, 2);
+  var irL4 = paper.rect(125, 225, 20, 50, 2);
+  
+  var irR1 = paper.rect(435, 225, 20, 50, 2);
+  var irR2 = paper.rect(410, 225, 20, 50, 2);
+  var irR3 = paper.rect(385, 225, 20, 50, 2);
+  var irR4 = paper.rect(360, 225, 20, 50, 2);
+  
+  var irF1 = paper.rect(225, 50, 50, 20, 2);
+  var irF2 = paper.rect(225, 75, 50, 20, 2);
+  var irF3 = paper.rect(225, 100, 50, 20, 2);
+  var irF4 = paper.rect(225, 125, 50, 20, 2);
+  
+  var irB1 = paper.rect(225, 435, 50, 20, 2);
+  var irB2 = paper.rect(225, 410, 50, 20, 2);
+  var irB3 = paper.rect(225, 385, 50, 20, 2);
+  var irB4 = paper.rect(225, 360, 50, 20, 2);
+  
+  // Create Ultrasonic Sensors
+  var usL1 = paper.path("M160 140S145 145 140 160"); 
+  usL1.attr("stroke-width", usWidth);
+  usL1.attr("stroke", usColourOff);
+  var usL2 = paper.path("M140 100S110 110 100 140"); 
+  usL2.attr("stroke-width", usWidth);
+  usL2.attr("stroke", usColourOff);
+  var usL3 = paper.path("M120 60S75 75 60 120"); 
+  usL3.attr("stroke-width", usWidth);
+  usL3.attr("stroke", usColourOff);
+  var usL4 = paper.path("M100 20S40 40 20 100"); 
+  usL4.attr("stroke-width", usWidth);
+  usL4.attr("stroke", usColourOff);
+  
+  var usR1 = paper.path("M340 140S355 145 360 160"); 
+  usR1.attr("stroke-width", usWidth);
+  usR1.attr("stroke", usColourOff);
+  var usR2 = paper.path("M360 100S390 110 400 140"); 
+  usR2.attr("stroke-width", usWidth);
+  usR2.attr("stroke", usColourOff);
+  var usR3 = paper.path("M380 60S425 75 440 120"); 
+  usR3.attr("stroke-width", usWidth);
+  usR3.attr("stroke", usColourOff);
+  var usR4 = paper.path("M400 20S460 40 480 100"); 
+  usR4.attr("stroke-width", usWidth);
+  usR4.attr("stroke", usColourOff);
+  
+  function updateSensorData()
+  {
+    // Read in the data
+    irForward = rosSnrIR3;
+    irReverse = rosSnrIR0;
+    irLeft = rosSnrIR2;
+    irRight = rosSnrIR1;
+    usLeft = rosSnrUS0;
+    usRight = rosSnrUS1; 
+    motLeft = rosMotSpdL;
+    motRight = rosMotSpdR;
+    
+    // Update motor direction
+    motL = Math.round(motLeft / snrMotFactor * rosMotDirL);
+    switch(motL)
+    {
+      case -4:
+        wheelLeft.attr("fill", mot1);
+        break;
+      case -3:
+        wheelLeft.attr("fill", mot2);
+        break;
+      case -2:
+        wheelLeft.attr("fill", mot3);
+        break;
+      case -1:
+        wheelLeft.attr("fill", mot4);
+        break;
+      case 0:
+        wheelLeft.attr("fill", mot5);
+        break;
+      case 1:
+        wheelLeft.attr("fill", mot6);
+        break;
+      case 2:
+        wheelLeft.attr("fill", mot7);
+        break;
+      case 3:
+        wheelLeft.attr("fill", mot8);
+        break;
+      case 4:
+        wheelLeft.attr("fill", mot9);
+        break;
+    }
+    
+    motR = Math.round(motRight / snrMotFactor * rosMotDirR);
+    switch(motR)
+    {
+      case -4:
+        wheelRight.attr("fill", mot1);
+        break;
+      case -3:
+        wheelRight.attr("fill", mot2);
+        break;
+      case -2:
+        wheelRight.attr("fill", mot3);
+        break;
+      case -1:
+        wheelRight.attr("fill", mot4);
+        break;
+      case 0:
+        wheelRight.attr("fill", mot5);
+        break;
+      case 1:
+        wheelRight.attr("fill", mot6);
+        break;
+      case 2:
+        wheelRight.attr("fill", mot7);
+        break;
+      case 3:
+        wheelRight.attr("fill", mot8);
+        break;
+      case 4:
+        wheelRight.attr("fill", mot9);
+        break;
+    }
+    
+    // Update sensor objects
+    if (irForward >= irRng1)
+    {
+      irF1.attr("fill", irColourOn)
+      if (irForward >= irRng2)
+      {
+        irF2.attr("fill", irColourOn)
+        if (irForward >= irRng3)
+        {
+          irF3.attr("fill", irColourOn)
+          if (irForward >= irRng4)
+          {
+            irF4.attr("fill", irColourOn)
+          }
+          else
+          {
+            irF4.attr("fill", irColourOff)
+          }
+        }
+        else
+        {
+          irF4.attr("fill", irColourOff)
+          irF3.attr("fill", irColourOff)
+        }
+      }
+      else
+      {
+        irF4.attr("fill", irColourOff)
+        irF3.attr("fill", irColourOff)
+        irF2.attr("fill", irColourOff)
+      }
+    }
+    else
+    {
+      irF4.attr("fill", irColourOff)
+      irF3.attr("fill", irColourOff)
+      irF2.attr("fill", irColourOff)
+      irF1.attr("fill", irColourOff)
+    }
+    
+    if (irReverse >= irRng1)
+    {
+      irB1.attr("fill", irColourOn)
+      if (irReverse >= irRng2)
+      {
+        irB2.attr("fill", irColourOn)
+        if (irReverse >= irRng3)
+        {
+          irB3.attr("fill", irColourOn)
+          if (irReverse >= irRng4)
+          {
+            irB4.attr("fill", irColourOn)
+          }
+          else
+          {
+            irB4.attr("fill", irColourOff)
+          }
+        }
+        else
+        {
+          irB4.attr("fill", irColourOff)
+          irB3.attr("fill", irColourOff)
+        }
+      }
+      else
+      {
+        irB4.attr("fill", irColourOff)
+        irB3.attr("fill", irColourOff)
+        irB2.attr("fill", irColourOff)
+      }
+    }
+    else
+    {
+      irB4.attr("fill", irColourOff)
+      irB3.attr("fill", irColourOff)
+      irB2.attr("fill", irColourOff)
+      irB1.attr("fill", irColourOff)
+    }
+    
+    if (irLeft >= irRng1)
+    {
+      irL1.attr("fill", irColourOn)
+      if (irLeft >= irRng2)
+      {
+        irL2.attr("fill", irColourOn)
+        if (irLeft >= irRng3)
+        {
+          irL3.attr("fill", irColourOn)
+          if (irLeft >= irRng4)
+          {
+            irL4.attr("fill", irColourOn)
+          }
+          else
+          {
+            irL4.attr("fill", irColourOff)
+          }
+        }
+        else
+        {
+          irL4.attr("fill", irColourOff)
+          irL3.attr("fill", irColourOff)
+        }
+      }
+      else
+      {
+        irL4.attr("fill", irColourOff)
+        irL3.attr("fill", irColourOff)
+        irL2.attr("fill", irColourOff)
+      }
+    }
+    else
+    {
+      irL4.attr("fill", irColourOff)
+      irL3.attr("fill", irColourOff)
+      irL2.attr("fill", irColourOff)
+      irL1.attr("fill", irColourOff)
+    }
+    
+    if (irRight >= irRng1)
+    {
+      irR1.attr("fill", irColourOn)
+      if (irRight >= irRng2)
+      {
+        irR2.attr("fill", irColourOn)
+        if (irRight >= irRng3)
+        {
+          irR3.attr("fill", irColourOn)
+          if (irRight >= irRng4)
+          {
+            irR4.attr("fill", irColourOn)
+          }
+          else
+          {
+            irR4.attr("fill", irColourOff)
+          }
+        }
+        else
+        {
+          irR4.attr("fill", irColourOff)
+          irR3.attr("fill", irColourOff)
+        }
+      }
+      else
+      {
+        irR4.attr("fill", irColourOff)
+        irR3.attr("fill", irColourOff)
+        irR2.attr("fill", irColourOff)
+      }
+    }
+    else
+    {
+      irR4.attr("fill", irColourOff)
+      irR3.attr("fill", irColourOff)
+      irR2.attr("fill", irColourOff)
+      irR1.attr("fill", irColourOff)
+    }
+    
+    if (usRight <= usRng1)
+    {
+      usR4.attr("stroke", usColourOn)
+      if (usRight <= usRng2)
+      {
+        usR3.attr("stroke", usColourOn)
+        if (usRight <= usRng3)
+        {
+          usR2.attr("stroke", usColourOn)
+          if (usRight <= usRng4)
+          {
+            usR1.attr("stroke", usColourOn)
+          }
+          else
+          {
+            usR1.attr("stroke", usColourOff)
+          }
+        }
+        else
+        {
+          usR1.attr("stroke", usColourOff)
+          usR2.attr("stroke", usColourOff)
+        }
+      }
+      else
+      {
+        usR1.attr("stroke", usColourOff)
+        usR2.attr("stroke", usColourOff)
+        usR3.attr("stroke", usColourOff)
+      }
+    }
+    else
+    {
+      usR1.attr("stroke", usColourOff)
+      usR2.attr("stroke", usColourOff)
+      usR3.attr("stroke", usColourOff)
+      usR4.attr("stroke", usColourOff)
+    }
+    
+    if (usLeft <= usRng1)
+    {
+      usL4.attr("stroke", usColourOn)
+      if (usLeft <= usRng2)
+      {
+        usL3.attr("stroke", usColourOn)
+        if (usLeft <= usRng3)
+        {
+          usL2.attr("stroke", usColourOn)
+          if (usLeft <= usRng4)
+          {
+            usL1.attr("stroke", usColourOn)
+          }
+          else
+          {
+            usL1.attr("stroke", usColourOff)
+          }
+        }
+        else
+        {
+          usL1.attr("stroke", usColourOff)
+          usL2.attr("stroke", usColourOff)
+        }
+      }
+      else
+      {
+        usL1.attr("stroke", usColourOff)
+        usL2.attr("stroke", usColourOff)
+        usL3.attr("stroke", usColourOff)
+      }
+    }
+    else
+    {
+      usL1.attr("stroke", usColourOff)
+      usL2.attr("stroke", usColourOff)
+      usL3.attr("stroke", usColourOff)
+      usL4.attr("stroke", usColourOff)
+    } 
+  }
+  
+	// Update continuously
+	setInterval(function(){updateSensorData()}, 1000/updateHz);
+</script>

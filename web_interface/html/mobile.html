@@ -1,0 +1,135 @@
+
+<html>
+<head>
+  <link href="/static/css/redmond/jquery-ui-1.10.0.custom.css" rel="stylesheet">
+  <link rel="stylesheet" type="text/css" href="/static/css/mainstyle.css">
+  <link rel="stylesheet" type="text/css" href="/static/css/jsxgraph.css" />
+  <link rel="stylesheet" type="text/css" href="/static/css/style.css">
+  <script src="/scripts/jquery-latest.js"></script>
+  <script src="/scripts/jquery-ui-1.10.0.custom.js"></script>
+  <script type="text/javascript" src="/scripts/jsxgraphcore.js"></script>
+  <script type="text/javascript" src="/scripts/raphael-min.js"></script>
+  <script type="text/javascript">
+    // The hostname line is set by the mako/python/cherrypy engine *not* jQuery...
+    var hostname = "${hostname}";
+    mobile =  /Android|webOS|iPhone|iPad|iPod|BlackBerry/i.test(navigator.userAgent);
+    camera_width = 640;
+    camera_height = 480;
+    var LowBattery;
+    $(document).ready(function() {
+       if (!mobile){
+             $('.MobileOnly',this).hide();
+        };
+
+        
+
+        getMessages_Framerate = 5; // Times-per-second we should update the framerate
+        gettingMessages = true; // When false, we do not get messages...
+     
+        setInterval(function(){createImageLayer(0);}, 1000 / 5);
+
+        setInterval(function(){getMessages()}, 1000 / getMessages_Framerate);
+
+        getMessages();
+        createImageLayer(0);
+
+        if(mobile) {
+            $( "#roslog" ).dialog({
+                resizable: false,
+                beforeClose: dialog_close
+            });
+        }
+        $( "#lowBattery").dialog({
+            autoOpen: false,
+            modal: true,
+    });
+  });
+
+
+    </script>
+    <script src="/scripts/ros_communicator.js"></script>
+    <script src="/scripts/layout_mods.js"></script>
+  </head>
+
+  <body class="colourTxt colour2">
+    <div class="header colour1 colourTxtH">
+      <img src="/static/img/uniLogo.jpg" alt="University of South Australia" height="60" width="200"> 
+      <div id="batteryMeter"><td>Battery % <input id="batLevel" type="text" value="N/A" readonly="true" class="dataReturn colour4" style="width:2em;"></div>
+      <div class="colourCtrls">
+        <!--<button onclick="colours(0)">Pretty</button> <br>
+        <button onclick="colours(1)">Pretty-er</button> <br>
+        <button onclick="colours(2)">Pretty-est</button>-->
+      </div>
+    </div>
+
+    <div id="mobContainer" class="container colour2">
+      
+      <div id="hardware" class="colour3" style="height: 131em;">
+          <h3 class="colourTxtH colour1">Hardware</h3>
+          <%include file="/cmnTiles/hardware.html" />
+      </div>
+
+      <div id="lcd" class="colour3" style="width: 20em;">
+          <h3 class="colourTxtH colour1">LCD Screen</h3>
+          <%include file="/cmnTiles/lcd.html" />
+      </div>
+      
+      <div id="remote" class="colour3" style="width: 21em;">
+          <h3 class="colourTxtH colour1">Drive Control</h3>
+          <%include file="/cmnTiles/remote.html" />
+      </div>
+      
+      <div id="servo" class="colour3" style="width: 21em;">
+          <h3 class="colourTxtH colour1">Arm Control</h3>
+          <%include file="/cmnTiles/servo.html" />
+      </div>
+
+      <div id="logs" class="colour3" style="width: 20em;">
+          <h3 class="colourTxtH colour1">Logger</h3>
+          <%include file="/cmnTiles/logs.html" />
+      </div>
+      
+      <div id="sensors" class="colour3" style="width: 42em;">
+          <h3 class="colourTxtH colour1">Sensor Feedback</h3>
+          <%include file="/cmnTiles/sensors.html" />
+      </div>
+
+      <div id="camera" class="colour3" style="width: 42em;">
+          <h3 class="colourTxtH colour1">Camera</h3>
+          <%include file="/cmnTiles/camera.html" />
+      </div>
+
+      <div id="waypoints" class="colour3" style="width: 42em;">
+          <h3 class="colourTxtH colour1"> Waypoint Control</h3>
+          <%include file="/cmnTiles/waypoints.html" />
+      </div>
+
+      <div id="map" class="colour3" style="width: 57em;">
+          <h3 class="colourTxtH colour1">Pathing Map</h3>
+          <%include file="/cmnTiles/map.html" />
+      </div>
+
+      <div id="imu" class="colour3" style="width: 57em;">
+          <h3 class="colourTxtH colour1">IMU Data</h3>
+          <%include file="/cmnTiles/imu.html" />
+      </div>
+
+      <div id="vicon" class="colour3" style="width: 57em;">
+          <h3 class="colourTxtH colour1">Vicon Data</h3>
+          <%include file="/cmnTiles/vicon.html" />
+      </div>
+    
+    </div>  
+  </body>
+</html>
+
+<script>
+
+  function updateBatteryLevelOutput()
+  {
+    document.getElementById('batLevel').value = rosBatteryLevel;
+  }
+
+  setInterval(function(){updateBatteryLevelOutput()}, 1000);
+
+</script>

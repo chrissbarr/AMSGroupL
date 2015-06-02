@@ -524,7 +524,7 @@ void LCD_callback(const std_msgs::String& cmd_msg) // Subroutine run when LCD di
 }
 
 
-void motor_callback(const std_msgs::UInt8MultiArray& cmd_msg) // Get new motor command values.
+void motor_callback(const std_msgs::Int32MultiArray& cmd_msg) // Get new motor command values.
 {
   if (cmd_msg.data_length <= 4 && cmd_msg.data_length > 0)
   {
@@ -564,7 +564,7 @@ void servo_callback(const std_msgs::Int32MultiArray& cmd_msg) // Get new servo v
 ros::Subscriber<std_msgs::Float32MultiArray> control_subscriber(MOTOR_CONTROL_TOPIC, control_callback);
 ros::Subscriber<std_msgs::String> IP_subscriber(IP_ADDRESS_TOPIC, IP_callback);
 ros::Subscriber<std_msgs::String> LCD_subscriber(LCD_WRITE_TOPIC, LCD_callback);
-ros::Subscriber<std_msgs::UInt8MultiArray> motor_subscriber(MOTOR_DRIVE_TOPIC, motor_callback);
+ros::Subscriber<std_msgs::Int32MultiArray> motor_subscriber(MOTOR_DRIVE_TOPIC, motor_callback);
 ros::Subscriber<std_msgs::Int32MultiArray> servo_subscriber(SERVO_DRIVE_TOPIC, servo_callback);
 
 

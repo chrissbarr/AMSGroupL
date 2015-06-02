@@ -1,0 +1,21 @@
+<div id="hardwareDump" title="Hardware">
+    <!--<b>Gripper Force Sensor</b>
+    <div id="-${hostname}-hardware-Force_Status_0_data" class="progressbar"><div id="-${hostname}-hardware-Force_Status_0_data_label" class="progress_label"></div></div>-->
+    <div id="dumpzone"></div>
+</div>
+
+<script type="text/javascript">
+	function updateDump()
+	{
+		if (dumpedTopics > 0)
+			for (i = 0; i < dumpedTopics; i++)
+			{
+				if (typeof(dumpObjs[i]) != 'undefined')
+				{
+					document.getElementById(dumpNames[i]+'_data').innerHTML = dumpObjs[i].Value;
+				}
+			}
+	}
+
+	setInterval(function(){updateDump()}, 1000/updateHz);
+</script>

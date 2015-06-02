@@ -64,14 +64,14 @@ delay = 0.1 # update rate for main loop (s)
 
 rospy.init_node("motor_pilot", anonymous=False) # name the script on the ROS network
 
-pub = rospy.Publisher("/%s/set/motor_drive" % socket.gethostname(), std_msgs.msg.UInt8MultiArray, queue_size=10) # sets up the topic for publishing the motor commands
+pub = rospy.Publisher("/%s/set/motor_drive2" % socket.gethostname(), std_msgs.msg.Int32MultiArray, queue_size=10) # sets up the topic for publishing the motor commands
 status_pub = rospy.Publisher("/nav_status", std_msgs.msg.String, queue_size=10) # sets up the topic for publishing the navigation status
 
 time.sleep(0.2) # make sure publisher setup
 
 # send a command to the motors (direction, left_speed, right_speed)
 def publish_motor_command(md_d, md_l, md_r):
-	motor_data = std_msgs.msg.UInt8MultiArray() # definitions in std_msgs.msg - data to be published need to be in ROS format
+	motor_data = std_msgs.msg.Int32MultiArray() # definitions in std_msgs.msg - data to be published need to be in ROS format
 	motor_data.data = [1,0,0,1]
 	motor_data.data[0] = int(md_d)
 	motor_data.data[1] = int(md_l)

@@ -1,0 +1,71 @@
+<div id="prac2_scores" title="Scores">
+  
+  <div class="MobileOnly">
+    <hr></hr>
+  </div>
+  
+  <div white-space="nowrap">
+    <table class="tblHiddenLayout"/>
+      <tr>
+        <td> Time Taken </td>
+        <td> <input id="scrTime" type="text" value="N/A" readonly="true" class="dataReturn colour3"> </td>
+      </tr>
+      <tr>
+        <td> Distance Travelled </td>
+        <td> <input id="scrDist" type="text" value="N/A" readonly="true" class="dataReturn colour3"> </td>    
+      </tr>
+      <tr>
+        <td> Intructions Given </td>
+        <td> <input id="scrIntr" type="text" value="N/A" readonly="true" class="dataReturn colour3"> </td>    
+      </tr>
+      <tr>
+        <td> <b> Final Score </b> </td>
+        <td> <input id="scrFinal" type="text" value="N/A" readonly="true" class="dataReturn colour3"> </td>    
+      </tr>
+    </table>
+  </div>
+
+</div>
+
+<script>
+
+var elapsedTime = 0;
+var elapsedDist = 0;
+var totalScore =  0;
+
+  function updateScoreOutputs()
+  {
+
+    if (0) // Ros time
+    {
+      elapsedTime = 0; // Set time to robots count
+    }
+    else 
+    {
+      elapsedTime = (scrTimeEnd - scrTimeStart) / 1000;
+    }
+
+    // Calcuate distance travelled
+    elapsedDist = (scrEncoderEnd - scrEncoderStart)/100
+
+    // Calcuate final score
+    totalScore = ((500 - elapsedTime) + (500 - elapsedDist));
+    if (totalScore < 0) // Students can not score negative
+    {
+      totalScore = 0;
+    }
+
+    document.getElementById('scrIntr').value = pointsCreated;
+    //document.getElementById('scrRtrv').value = collectFlags; Abandoned metric, number of collection flags called in the instruction list
+    document.getElementById('scrTime').value = elapsedTime.toFixed(1);
+    document.getElementById('scrDist').value = elapsedDist.toFixed(0);
+    document.getElementById('scrFinal').value = totalScore.toFixed(0);
+
+    // Placeholders
+    scrTimeEnd = (new Date()).getTime();
+    scrEncoderEnd = (rosEncCountL + rosEncCountR) / 2;
+  }
+
+  setInterval(function(){updateScoreOutputs()}, 200);
+
+</script>

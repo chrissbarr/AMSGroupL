@@ -1,0 +1,29 @@
+<div id="debug_data">
+  <div class="MobileOnly">
+    <hr></hr>
+    <h3>Debug</h3>
+  </div>
+
+
+  <div id="SSS_Test" class="debug_topic">
+    <h5	   id="SSS_Test_Title" class="debug_topic_title" onClick="toggle_topic('SSS_Test_data')">Title</h5>
+    <textarea  class="debug_topic_text">TextAreaData</textarea>
+  </div>
+  <div id="TTT_Test" class="debug_topic">
+    <h5 id="TTT_Test_Title" class="debug_topic_title" onClick="toggle_topic('TTT_Test_data')">Title</h5>
+    <textarea  class="debug_topic_text">TextAreaData TTTTTTTTT</textarea>
+  </div>
+  <div id="UUU_Test" class="debug_topic">
+    <h5 id="UUU_Test_Title" class="debug_topic_title" onClick="toggle_topic('UUU_Test_data')">Title</h5>
+    <textarea  class="debug_topic_text">TextAreaData UUUUUUUUUuu</textarea>
+  </div>
+</div>
+
+<script type="text/javascript">
+    if(!mobile) {
+        $("#debug_data").dialog({
+            resizable: false,
+            beforeClose: dialog_close
+        });
+     } 
+</script>

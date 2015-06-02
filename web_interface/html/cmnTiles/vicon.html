@@ -1,0 +1,66 @@
+<div id="ViconSystem" title="Vicon Tracking">
+    <table id="vicon_table">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>X</th>
+                <th>Y</th>
+                <th>Z</th>
+                <th>Rotation X</th>
+                <th>Rotation Y</th>
+                <th>Rotation Z</th>
+            </tr>
+        </thead>
+    <tbody id="vicon_table_body">
+        <tr id="vicon_node" class="vicon_node hidden">
+            <td class="vicon_name"></td>
+            <td class="vicon_position_x"></td>
+            <td class="vicon_position_y"></td>
+           <td class="vicon_position_z"></td>
+           <td class="vicon_rotation_x"></td>
+           <td class="vicon_rotation_y"></td>
+           <td class="vicon_rotation_z"></td>
+        </tr>
+    </tbody>
+    </table>
+</div>
+
+<script>
+
+    function vicon_message_received(data)
+    {
+        if (typeof data == "undefined")
+        {
+            return false;
+        }
+        else
+        {
+            data = data.split(" ");
+            div_ob = "#vicon_node_" + data[0];
+            if ($(div_ob).length == 0){
+                vicon_new_node(data[0]);
+            };
+            $(div_ob + " .vicon_position_x").text(Math.round(data[1]));
+            $(div_ob + " .vicon_position_y").text(Math.round(data[2]));
+            $(div_ob + " .vicon_position_z").text(Math.round(data[3])); 
+            $(div_ob + " .vicon_rotation_x").text(Math.round(data[4]* 180 / Math.PI)); 
+            $(div_ob + " .vicon_rotation_y").text(Math.round(data[5]* 180 / Math.PI)); 
+            $(div_ob + " .vicon_rotation_z").text(Math.round(data[6]* 180 / Math.PI)); 
+            return false;
+        }
+    }
+
+    function vicon_new_node(name)
+    {
+        new_id = "vicon_node_"  + name;
+        new_node = $("#vicon_node").clone(true);
+        new_node.show();
+        new_node.attr("id", new_id);
+
+        new_node.appendTo("#vicon_table_body");
+        $("#" + new_id + " .vicon_name").text(name);
+    }
+    
+    setInterval(function(){vicon_message_received(objVicon.value);}, 1000/updateHz);
+
+</script>

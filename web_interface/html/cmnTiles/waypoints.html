@@ -1,0 +1,352 @@
+<div id="waypoint_commands" title="Waypoints">
+<script type="text/javascript" src="/flags.js"></script>
+  <div style="float: left;">
+    <h4>Current Pose</h4>
+    <table border="1" cellpadding="5px">
+      <tr>
+          <td>x (m):</td>
+          <td> <input id="outPose1" type="text" value="N/A" readonly="true" class="dataReturn colour3"> </td>
+      </tr>
+      <tr>
+          <td>y (m):</td>
+          <td> <input id="outPose2" type="text" value="N/A" readonly="true" class="dataReturn colour3"> </td>
+      </tr>
+      <tr>
+          <td>&Theta; (deg):</td>
+          <td> <input id="outPoseHeading" type="text" value="N/A" readonly="true" class="dataReturn colour3"> </td>
+      </tr>
+      <tr>
+          <td colspan=2 align="center">
+            <input type="button" value="Zero Pose" onclick="zeroPose();">
+          </td>
+      </tr>
+    </table>
+  </div>
+
+  <div style="float: left;">
+    <h4>Control Method</h4>
+    <input type="radio" id="radManual" name="ctrlType" value="manual" onClick="changeCtrlMode(0);" checked='checked'/>
+    <label for="radManual">Manual</label> <br>
+    <input type="radio" id="radPts" name="ctrlType" value="waypoints" onClick="changeCtrlMode(1);"/>
+    <label for="radPts">Automatic - Waypoints</label> <br>
+    <input type="radio" id="radVec" name="ctrlType" value="vectors" onClick="changeCtrlMode(2);"/>
+    <label for="radVec">Automatic - Vectors</label> <br>
+  </div>
+
+  <div id="wayptsWarnBox">
+
+  </div>
+
+  <div style="float: left; clear:top;">
+    <h4>Course Planning</h4>
+    <div id="waypoint_section">
+      <div id="waypoint_point_0" class="waypoint_point">
+        
+        <label class="ptsLabel1">X</label>
+        <input type="text" class="point_x" value="0" style="width: 2.5em">
+
+        <label class="ptsLabel2">Y</label>
+        <input type="text" class="point_y" value="0" style="width: 2.5em">
+        
+        <label class="ptsLabel3">&Theta;</label>
+        <input type="text" class="point_theta" value="0" style="width: 2.5em" onblur="enforceRules(this)">
+        
+        Flag<select class="point_flag" id="waypoint_flag">
+          <option value="0">None</option>
+        </select>
+        <input type="button" class="waypoint_remove" value="-" >
+      </div>
+    </div>
+    <input type="button" value="Add Point" onclick="add_waypoint_point();">
+    <input type="button" value="Upload Commands" onclick="uploadCmds();">
+  </div>
+
+</div>
+
+<script type="text/javascript">
+  //Start in Manual mode
+  sendRosMessage("/"+hostname+"/set/motor_control", "std_msgs/Float32MultiArray", [0]);
+
+  var poseOffsetX = 0; 
+  var poseOffsetY = 0;
+  var poseOffsetTheta = 0;
+
+  // Function to pull in pose data
+  function getPose()
+  {
+    // Set true values
+    this.x = rosPose1;
+    this.y = rosPose2;
+    this.theta = rosPoseHeading;
+   
+    // Set offset (adjusted) values
+    this.xAdj = rosPose1 + poseOffsetX;
+    this.yAdj = rosPose2 + poseOffsetY;
+
+    // Return
+    return this;
+  }
+
+  function zeroPose()
+  {
+    // Update the offsets
+    poseOffsetX = -1 * rosPose1;
+    poseOffsetY = -1 * rosPose2;
+  }
+
+  function updatePoseOutputs()
+  {
+    document.getElementById('outPose1').value = getPose().xAdj.toFixed(2);
+    document.getElementById('outPose2').value = getPose().yAdj.toFixed(2);
+    document.getElementById('outPoseHeading').value = getPose().theta.toFixed(2);
+  }
+
+
+// Switch between auto and manual modes
+var ctrlMode = [0];
+function changeCtrlMode(mode)
+{
+  switch (mode)
+  {
+    case 0:
+      ctrlMode = [0];
+
+      if (typeof pgPrac2 != "undefined")
+      {
+        document.getElementById("wayptsWarnBox").innerHTML = "";
+      }
+
+      // Colorise the controls
+      document.getElementById("motor_forward").src = "/static/img/go-up.png";
+      document.getElementById("motor_left").src="/static/img/gtk-redo-ltr_rotate_90_flip.png";
+      document.getElementById("motor_right").src="/static/img/gtk-redo-ltr_rotate_90.png";
+      document.getElementById("motor_stop").src="/static/img/process-stop.png";
+      document.getElementById("motor_backward").src="/static/img/go-down.png";
+      break;
+    case 1:
+      ctrlMode = [1];
+
+      if (typeof pgPrac2 != "undefined")
+      {
+        document.getElementById("wayptsWarnBox").innerHTML = "";
+      }
+
+      objects = $(".ptsLabel1")
+      for (i = 0; i < objects.length; i++)
+      {
+        objects[i].innerHTML = "X";
+      }
+
+      objects = $(".ptsLabel2")
+      for (i = 0; i < objects.length; i++)
+      {
+        objects[i].innerHTML = "Y";
+      }
+
+      objects = $(".ptsLabel3")
+      for (i = 0; i < objects.length; i++)
+      {
+        objects[i].innerHTML = "&Theta;";
+      }
+      
+      // Decolorise the controls
+      document.getElementById("motor_forward").src = "/static/img/grey_go-up.png";
+      document.getElementById("motor_left").src="/static/img/grey_gtk-redo-ltr_rotate_90_flip.png";
+      document.getElementById("motor_right").src="/static/img/grey_gtk-redo-ltr_rotate_90.png";
+      document.getElementById("motor_stop").src="/static/img/grey_process-stop.png";
+      document.getElementById("motor_backward").src="/static/img/grey_go-down.png";
+      break;
+    case 2:
+      ctrlMode = [2];
+
+      if (typeof pgPrac2 != "undefined")
+      {
+        document.getElementById("wayptsWarnBox").innerHTML = "Warning: For this activity only 90 degree turns are available.";
+      }
+
+      objects = $(".ptsLabel1")
+      for (i = 0; i < objects.length; i++)
+      {
+        objects[i].innerHTML = "&nu;";
+      }
+
+      objects = $(".ptsLabel2")
+      for (i = 0; i < objects.length; i++)
+      {
+        objects[i].innerHTML = "t";
+      }
+
+      objects = $(".ptsLabel3")
+      for (i = 0; i < objects.length; i++)
+      {
+        objects[i].innerHTML = "&Theta;";
+      }
+
+      // Decolorise the controls
+      document.getElementById("motor_forward").src = "/static/img/grey_go-up.png";
+      document.getElementById("motor_left").src="/static/img/grey_gtk-redo-ltr_rotate_90_flip.png";
+      document.getElementById("motor_right").src="/static/img/grey_gtk-redo-ltr_rotate_90.png";
+      document.getElementById("motor_stop").src="/static/img/grey_process-stop.png";
+      document.getElementById("motor_backward").src="/static/img/grey_go-down.png";
+      break;
+  }
+  
+  sendRosMessage("/"+hostname+"/set/motor_control", "std_msgs/Float32MultiArray", ctrlMode);
+}
+
+changeCtrlMode(0);
+
+pointsCreated = 0;
+
+var x;
+var y; 
+var flag;
+var theta;
+
+  function uploadCmds()
+  {
+    var vecX = getPose().xAdj;
+    var vecY = getPose().yAdj;
+    var vecPrevX;
+    var vecPrevY;
+    var total_count = 0;
+    $("#waypoint_section").children().each(function()
+    {
+      total_count += 1; // count total number of elements
+    })
+    var index = 0; // current waypoint being investigated
+    var point = []; // value of current waypoint
+    var waypoints = []; // define new blank array to hold all waypoints
+    waypoints.length = total_count*3; // set size of waypoints array to be 3x (x, y, theta) number of waypoints so all will fit into a 1D array for transmission
+
+    //Remove all existing points from graph
+    for (var ptCount = 0; ptCount < pointsCreated; ptCount++)
+    {
+      board.removeObject(board.select('pt'+ptCount));
+    }
+    
+    $("#waypoint_section").children().each(function()
+    {
+      id = $(this).attr("id");
+
+      if (ctrlMode == 1)
+      {
+        // Add the offset values to switch between local coords and global(robot) coords
+        x = $("#" + id + " .point_x").attr("value") - poseOffsetX;
+        y = $("#" + id + " .point_y").attr("value") - poseOffsetY;
+      }
+      else if (ctrlMode == 2)
+      {
+        // No offset
+        x = $("#" + id + " .point_x").attr("value");
+        y = $("#" + id + " .point_y").attr("value");
+      }
+      flag = $("#" + id + " .point_flag").val();
+      theta = $("#" + id + " .point_theta").attr("value");
+
+        if (isNaN(parseFloat(x)))
+        {
+          x = 0;
+        }
+
+        if (isNaN(parseFloat(y)))
+        {
+          y = 0;
+        }
+        
+
+        if (isNaN(parseFloat(theta)))
+        {
+          theta = 0;
+        }
+      
+      point = [total_count, index, parseFloat(x), parseFloat(y), parseFloat(theta)];
+        
+      waypoints[index*4] = parseFloat(x);
+      waypoints[index*4+1] = parseFloat(y);
+      waypoints[index*4+2] = parseFloat(theta);
+      waypoints[index*4+3] = parseFloat(flag);
+      
+      // Draw points on map
+      if (ctrlMode == 1)
+      {
+        // Undo the offset for display
+        board.create('point',[(x + poseOffsetX), (y + poseOffsetY)], {name:'pt'+index, size:'5', face:'x', strokeColor: 'blue', withLabel:false});
+        if (index != 0)
+        {
+          board.create('line',['pt'+(index-1),'pt'+index], {strokeColor:'#0000ff',strokeWidth:2, straightFirst:false, straightLast:false});
+        }
+      }
+
+      else if (ctrlMode == 2)
+      {
+        vecPrevX = vecX;
+        vecPrevY = vecY;
+
+        // Convert between polar and cart coords
+        // Undo the offset for display
+          // Dist = 50v * t / 10492
+          // metres = (50 * (ticks/20ms) * seconds) / ticks/metre
+          // 10492 is the measure ticks per metre rate
+        var dist = 50*x * y / 10492;
+        vecX = dist * Math.cos((theta) * Math.PI/180) + vecPrevX;
+        vecY = dist * Math.sin((theta) * Math.PI/180) + vecPrevY;
+
+        board.create('point',[vecX, vecY], {name:'pt'+index, size:'0', face:'x', strokeColor: 'blue', withLabel:false});
+        if (index == 0)
+        {
+          board.create('point',[vecPrevX, vecPrevY], {name:'pt'+(index-1), size:'0', face:'x', strokeColor: 'blue', withLabel:false});
+        }
+        board.create('line',['pt'+(index-1),'pt'+index], {strokeColor:'#0000ff',strokeWidth:2, straightFirst:false, straightLast:false, lastArrow:true});
+      }
+      
+      index += 1;
+    });
+    
+    pointsCreated = index;
+
+    console.log(waypoints);
+    sendRosMessage("/"+hostname+"/set/waypoints", "std_msgs/Float32MultiArray", waypoints);
+
+    // Start counting the metrics for prac2
+    scrTimeStart = (new Date()).getTime();
+    scrEncoderStart = (rosEncCountL + rosEncCountR) / 2;
+}
+
+function add_waypoint_point(){
+    new_point = $("#waypoint_section").children().last().clone(true);
+    new_id = new_point.attr("id").replace("waypoint_point_", "");
+    new_id = "waypoint_point_" + (parseInt(new_id) + 1)
+    new_point.attr("id", new_id);
+    new_point.children().each(function(){
+        if ($(this).attr("type") != "button"){
+            $(this).attr("value", "0");
+        }
+    });
+    new_point.appendTo("#waypoint_section");
+};
+
+$(".waypoint_remove").live('click', function(){
+    if ($(this).parent().parent().children().length >= 2){
+        $(this).parent().remove();
+    }    
+});
+
+  // Generate Flag List
+  flags = getFlagList();
+  for (i = 0; i < flags.length; i++)
+  {
+    $("#waypoint_flag").append('<option value="' + (i+1) + '">'+ flags[i] +'</option>');
+  }
+
+  function enforceRules(field)
+  {
+    if (typeof pgPrac2 != "undefined" && ctrlMode[0] == 2)
+    {
+      field.value = (Math.round(field.value / 90) * 90).toString();
+    }
+  }
+
+  setInterval(function(){updatePoseOutputs()}, 1000/updateHz);
+
+</script>

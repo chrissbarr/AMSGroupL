@@ -1,0 +1,113 @@
+h3
+{
+    background: #00628b;
+    font-family:"Arial";
+    margin: -8px -8px 8px -8px;
+    padding: 4px;
+    color:white;
+}
+
+#mainTable th, td
+{
+    border-style:groove;
+    border-width:2px;
+}
+
+#mainTable
+{
+    border-style:groove;
+    border-width:5px;
+}
+
+#mainTable td
+{
+    background: #e6e6dc; 
+    padding: 8px;
+    vertical-align: top;
+}
+
+
+
+#webcam img {
+    width: 640px;
+    height: 480px;
+    border: thick solid #000000;    
+}
+
+.MobileOnly{
+    padding-top: 5px;
+    padding-bottom: 5px;
+}
+
+hr{
+    border: 3px solid #000000;        
+}
+
+.LCD_Input{
+    font-size:large;
+    font-weight:bold;
+    font-family:"Lucida Console", Monaco, monospace;
+    background:#64FE2E;
+    border: thick solid #000000;
+}
+
+.Arrow{
+    display:inline;
+}
+
+.ArrowGap{
+    display:inline;
+    width:32
+}
+
+#vicon_table
+{
+    font-family: "Lucida Sans Unicode", "Lucida Grande", Sans-Serif;
+    font-size: 11px;
+    text-align: left;
+    border-collapse: collapse;
+}
+
+#vicon_table th
+{
+    font-size: 13px;
+    font-weight: normal;
+    padding: 8px;
+    background: #b9c9fe;
+    border-top: 4px solid #aabcfe;
+    border-bottom: 1px solid #fff;
+    color: #039;
+}
+
+#vicon_table td
+{
+    padding: 8px;
+    background: #e8edff; 
+    border-bottom: 1px solid #fff;
+    color: #669;
+    border-top: 1px solid transparent;
+}
+
+#vicon_table tr:hover td
+{
+    background: #d0dafd;
+    color: #339;
+}
+
+.hidden{
+    display: none;
+}
+
+
+#mainTable td{
+    padding: 8px;
+    vertical-align: top;
+}
+
+input[type="text"]  {
+    width: 45px;
+}
+
+input[type="number"]  {
+    width: 40px;
+}

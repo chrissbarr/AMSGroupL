@@ -186,25 +186,6 @@ def draw_grid(graph, width=2, **style):
 		for x in range(graph.width):
 			print("%%-%ds" % width % draw_tile(graph, (x, y), style, width)),
 		print()
-		
-def breadth_first_search(graph, start, goal):
-	frontier = Queue()
-	frontier.put(start)
-	came_from = {}
-	came_from[start] = None
-	
-	while not frontier.empty():
-		current = frontier.get()
-		
-		if current == goal:
-			break
-		
-		for next in graph.neighbors(current):
-			if next not in came_from:
-				frontier.put(next)
-				came_from[next] = current
-	
-	return came_from
 
 def cell_to_coord(map,cell_x, cell_y):
 	"""
@@ -213,6 +194,38 @@ def cell_to_coord(map,cell_x, cell_y):
 	x = map.info.origin.position.x + (cell_x * map.info.resolution)
 	y = map.info.origin.position.y + (cell_y * map.info.resolution)
 	return (x, y)
+
+def optimise_path(old_path):
+	old_path_length = len(old_path)
+
+	new_path = []
+	new_path.append([])
+
+	list_index = 0
+
+	new_path[list_index].append(old_path[0][0])
+	new_path[list_index].append(old_path[0][1])
+
+	list_index+=1
+
+	for i in range(1, old_path_length-2):
+		if((old_path[i][0] == old_path[i-1][0] and old_path[i][0] == old_path[i+1][0]) or (old_path[i][1] == old_path[i-1][1] and old_path[i][1] == old_path[i+1][1])):
+			# don't add to list
+			print("cell skipped")
+		else:
+			new_path.append([])
+			new_path[list_index].append(old_path[i][0])
+			new_path[list_index].append(old_path[i][1])
+
+			list_index+=1
+
+	new_path.append([])
+	new_path[list_index].append(old_path[old_path_length-1][0])
+	new_path[list_index].append(old_path[old_path_length-1][1])
+
+	return new_path
+
+
 
 def rosmap_to_map(rosmap):
 	global occupancy_grid
@@ -248,11 +261,16 @@ def rosmap_to_map(rosmap):
 	print(g_path)
 	print(len(g_path))
 
+	optimised_path = optimise_path(g_path)
+
+	print(optimised_path)
+	print(len(optimised_path))
+
 	waypoint_index = 0
 
-	while(waypoint_index < len(g_path)-1):	#until we've reached the end of the path
+	while(waypoint_index < len(optimised_path)-1):	#until we've reached the end of the path
 
-		(d_x, d_y) = cell_to_coord(rosmap, g_path[waypoint_index][0], g_path[waypoint_index][1])
+		(d_x, d_y) = cell_to_coord(rosmap, optimised_path[waypoint_index][0], optimised_path[waypoint_index][1])
 
 		if(current_d_x == d_x and current_d_y == d_y):
 			# if the navigation system has reached the coordinate
@@ -265,13 +283,12 @@ def rosmap_to_map(rosmap):
 					grid_finished = True
 		else:
 			#coordinate isn't set - set it
-			print("Move to cell: [%d, %d]") % (g_path[waypoint_index][0], g_path[waypoint_index][1])
+			print("Move to cell: [%d, %d]") % (optimised_path[waypoint_index][0], optimised_path[waypoint_index][1])
 			send_desired_pose(d_x, d_y, -999)
 
 		time.sleep(0.5)
 	
 	
-
 def run():
 	rospy.init_node('mapConverter',anonymous=True)
 	# subscribe to ros occupancy-grid topic

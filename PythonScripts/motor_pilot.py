@@ -28,13 +28,13 @@ import tf
 
 
 threshold = 0.1 # units are in metres, reached target if x & y within 0.1 = 10cm of target position
-rot_threshold = 0.1	# angle in radians, consider heading correct if within this number of radians to target point
+rot_threshold = 0.2	# angle in radians, consider heading correct if within this number of radians to target point
 travel_heading_error_window = 0.5 # If angle to target > this during travel, robot will stop and reorient
 base_speed = 100 # Default speed robot travels at. Left and right motors are biased from this value to adjust steering.
 
 # NAVIGATION STATUS MESSAGES
-nav_coords_reached = "COORDS REACHED"
-nav_move_in_progress = "MOVING"
+nav_coords_reached = 'CR'
+nav_move_in_progress = 'MOVING'
 
 
 #rotation settings
@@ -56,16 +56,16 @@ y = 0
 th = 0
 
 #desired pose variables
-d_x = 6
-d_y = 2
-d_th = 0
+d_x = -999
+d_y = -999
+d_th = -999
 
 delay = 0.1 # update rate for main loop (s)
 
 rospy.init_node("motor_pilot", anonymous=False) # name the script on the ROS network
 
 pub = rospy.Publisher("/%s/set/motor_drive" % socket.gethostname(), std_msgs.msg.UInt8MultiArray, queue_size=10) # sets up the topic for publishing the motor commands
-status_pub = rospy.Publisher("nav_status", std_msgs.msg.String, queue_size=10) # sets up the topic for publishing the navigation status
+status_pub = rospy.Publisher("/nav_status", std_msgs.msg.String, queue_size=10) # sets up the topic for publishing the navigation status
 
 time.sleep(0.2) # make sure publisher setup
 
@@ -184,76 +184,77 @@ def main(argv):
 		target_heading = angle_between_points(x,y,d_x,d_y)
 		heading_error = angular_difference(target_heading,th)
 		
-		print("Current Position: %.3f %.3f %.3f | Target Position: %.3f %.3f %.3f | Heading Error: %.3f") % (x,y,th,d_x,d_y,d_th,heading_error)
-				
-		if(coordinates_reached() == False):
-			if(moving == False):
-				if(math.fabs(heading_error) < rot_threshold):
-					print("Heading achieved! Beginning move towards target!")
-					# we're facing the right way, so stop and drive straight!
-					# first, stop motors
-					publish_motor_command(1,0,0)
-					time.sleep(0.5) # make sure message has time to be enacted
+		if(d_x != -999 and d_y != -999):
+			print("Current Position: %.3f %.3f %.3f | Target Position: %.3f %.3f %.3f | Heading Error: %.3f") % (x,y,th,d_x,d_y,d_th,heading_error)
 					
-					# drive straight
-					publish_motor_command(0,base_speed,base_speed)
-					moving = True
-					
-					rot_error_sum = 0 #reset PID integrator
-					
-					time.sleep(0.5) # make sure message has time to be enacted
-				else:
-					print("Orienting towards target...")
-					#rotate to face heading
-					# start motors moving based on angular difference
-					#motor_speed = int(round(rot_P * math.fabs(heading_error) + rot_I * rot_error_sum))
-					#rot_error_sum += heading_error
-
-					#if(heading_error > 0):
-					#	rot = 3
-					#if(heading_error < 0):
-					#	rot = 2
+			if(coordinates_reached() == False):
+				if(moving == False):
+					if(math.fabs(heading_error) < rot_threshold):
+						print("Heading achieved! Beginning move towards target!")
+						# we're facing the right way, so stop and drive straight!
+						# first, stop motors
+						publish_motor_command(1,0,0)
+						time.sleep(0.5) # make sure message has time to be enacted
 						
-					#publish_motor_command(rot,motor_speed,motor_speed)
-					
-					turn_to_face(heading_error)
+						# drive straight
+						publish_motor_command(0,base_speed,base_speed)
+						moving = True
+						
+						rot_error_sum = 0 #reset PID integrator
+						
+						time.sleep(0.5) # make sure message has time to be enacted
+					else:
+						print("Orienting towards target...")
+						#rotate to face heading
+						# start motors moving based on angular difference
+						#motor_speed = int(round(rot_P * math.fabs(heading_error) + rot_I * rot_error_sum))
+						#rot_error_sum += heading_error
+
+						#if(heading_error > 0):
+						#	rot = 3
+						#if(heading_error < 0):
+						#	rot = 2
+							
+						#publish_motor_command(rot,motor_speed,motor_speed)
+						
+						turn_to_face(heading_error)
+				else:
+					#if we are moving but coordinates aren't reached...
+					if(heading_error > travel_heading_error_window):
+						# if we're off course by too much, stop and re-orientate towards target
+						publish_motor_command(0,0,0)
+						moving = False
+						# loop should take over and make things work now we're stopped away from the target
+					else:
+						#adjust motors to aim towards target point
+						motor_left_speed = base_speed - (heading_error * driving_P + driving_error_sum * driving_I)
+						motor_left_right = base_speed + (heading_error * driving_P + driving_error_sum * driving_I)
+						driving_error_sum += heading_error
+						publish_motor_command(0,motor_left_speed,motor_left_right)
+						#publish_motor_command(0,base_speed,base_speed)
+						
 			else:
-				#if we are moving but coordinates aren't reached...
-				if(heading_error > travel_heading_error_window):
-					# if we're off course by too much, stop and re-orientate towards target
+				print("Coordinates reached!")
+				#if we've just reached the point, stop!
+				if(moving == True or justStarted == True):
+					justStarted = False
 					publish_motor_command(0,0,0)
 					moving = False
-					# loop should take over and make things work now we're stopped away from the target
-				else:
-					#adjust motors to aim towards target point
-					motor_left_speed = base_speed - (heading_error * driving_P + driving_error_sum * driving_I)
-					motor_left_right = base_speed + (heading_error * driving_P + driving_error_sum * driving_I)
-					driving_error_sum += heading_error
-					publish_motor_command(0,motor_left_speed,motor_left_right)
-					#publish_motor_command(0,base_speed,base_speed)
+					driving_error_sum = 0
+					print("Motors stopped!")
 					
-		else:
-			print("Coordinates reached!")
-			#if we've just reached the point, stop!
-			if(moving == True or justStarted == True):
-				justStarted = False
-				publish_motor_command(0,0,0)
-				moving = False
-				driving_error_sum = 0
-				print("Motors stopped!")
+				# now, turn to face the desired heading (if there is one)	
+				heading_offset = angular_difference(d_th,th)
 				
-			# now, turn to face the desired heading (if there is one)	
-			heading_offset = angular_difference(d_th,th)
-			
-			if(d_th != -999 and math.fabs(heading_offset) > rot_threshold):	#-999 means orientation doesn't matter, otherwise turn
-				print("Matching desired orientation...")
-				turn_to_face(heading_offset)
-			else:
-				#target position and orientation is reached!
-				#stop the motors
-				publish_motor_command(0,0,0)
-				#and let all other scripts know
-				status_pub.pub(nav_coords_reached)
+				if(d_th != -999 and math.fabs(heading_offset) > rot_threshold):	#-999 means orientation doesn't matter, otherwise turn
+					print("Matching desired orientation...")
+					turn_to_face(heading_offset)
+				else:
+					#target position and orientation is reached!
+					#stop the motors
+					publish_motor_command(0,0,0)
+					#and let all other scripts know
+					status_pub.publish(nav_coords_reached)
 					
 		loop_sleep = delay - (time.time() - loop_start) # if loop delay too low then will print data faster than updates are recieved
 		

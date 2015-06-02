@@ -20,12 +20,15 @@ def map_broadcaster():
 	
 	new_map = create_map()
 
-	rate = rospy.Rate(.1)
+	pub.publish(new_map)
+
+	rate = rospy.Rate(2)
+
 	
 	key_pressed = False
 	
 	while key_pressed == False:
-		pub.publish(new_map)
+		
 		key_pressed = select.select([sys.stdin], [], [], 0) == ([sys.stdin], [], []) # is key pressed?
 		rate.sleep()
 		
@@ -39,10 +42,10 @@ def create_map( ):
     test_map.header.frame_id = 'world'
     
     test_map.info.resolution = 250 
-    test_map.info.width = 20
-    test_map.info.height = 10
-    test_map.info.origin.position.x = 0 #-test_map.info.width/2
-    test_map.info.origin.position.y = 0 #-test_map.info.height/2
+    test_map.info.width = 5
+    test_map.info.height = 5
+    test_map.info.origin.position.x = 5000 #-test_map.info.width/2
+    test_map.info.origin.position.y = 1000 #-test_map.info.height/2
     test_map.info.origin.position.z = 0 
     test_map.info.origin.orientation.x = 0.0 
     test_map.info.origin.orientation.y = 0.0 
@@ -55,10 +58,13 @@ def create_map( ):
     	test_map.data.append(0)
     	
     # add in a few obstacles:
-    add_obstacle(test_map,0,0)
-    add_obstacle(test_map,1,0)
-    for i in range (0, 9):
-    	add_obstacle(test_map,5,i)
+    add_obstacle(test_map,0,2)
+    add_obstacle(test_map,1,2)
+    add_obstacle(test_map,2,2)
+    add_obstacle(test_map,3,2)
+    add_obstacle(test_map,3,3)
+    #for i in range (0, 9):
+    #	add_obstacle(test_map,5,i)
     print test_map
     return test_map
 

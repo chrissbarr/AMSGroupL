@@ -17,11 +17,15 @@ from geometry_msgs.msg import Point, Quaternion, PoseStamped, Pose
 import tf
 
 # NAVIGATION STATUS MESSAGES
-nav_coords_reached = "COORDS REACHED"
-nav_move_in_progress = "MOVING"
-current_nav_string = ""
+nav_coords_reached = 'CR'
+nav_move_in_progress = 'MOVING'
+current_nav_string = ''
 
 # DESIRED NAVIGATION COORDINATES
+actual_x = 0
+actual_y = 0
+actual_th = 0
+
 current_d_x = 0		#from desired pose topic
 current_d_y = 0
 current_d_th = 0
@@ -90,8 +94,9 @@ class PriorityQueue:
 
 def pose_subscriber():
 	# subscribe to ROS data updates
+	CP = rospy.Subscriber("currentPose", PoseStamped, current_pose_update)
 	DP = rospy.Subscriber("desiredPose", Pose, desired_pose_update)
-	NS = rospy.Subscriber("nav_status", std_msgs.msg.String, nav_status_update)
+	NS = rospy.Subscriber("/nav_status", std_msgs.msg.String, nav_status_update)
 	return (DP, NS)
 
 def desired_pose_update(data):
@@ -111,10 +116,28 @@ def desired_pose_update(data):
 	# convert orientation from quaternion to euler angles, read yaw
 	euler = tf.transformations.euler_from_quaternion(q)
 	current_d_th = euler[2]
+
+def current_pose_update(data):
+	global actual_x, actual_y, actual_th
+
+	# read in position
+	actual_x = data.pose.position.x
+	actual_y = data.pose.position.y
+	
+	# read in orientation
+	q = (
+	    data.pose.orientation.x,
+	    data.pose.orientation.y,
+	    data.pose.orientation.z,
+	    data.pose.orientation.w)
+	
+	# convert orientation from quaternion to euler angles, read yaw
+	euler = tf.transformations.euler_from_quaternion(q)
+	actual_th = euler[2]
 	
 def nav_status_update(message):
 	global current_nav_string
-	current_nav_string = message
+	current_nav_string = message.data
 
 def send_desired_pose(x, y, th):
     print("Requesting move to point: x: %.3f  y: %.3f  Th: %.1f") % (x, y, th) # print 2D pose data to terminal
@@ -191,8 +214,8 @@ def cell_to_coord(map,cell_x, cell_y):
 	"""
 	Converts grid x and y coordinates into real-world coordinates
 	"""
-	x = map.info.origin.position.x + (cell_x * map.info.resolution)
-	y = map.info.origin.position.y + (cell_y * map.info.resolution)
+	x = (map.info.origin.position.x + (cell_x * map.info.resolution)) /1000
+	y = (map.info.origin.position.y + (cell_y * map.info.resolution)) /1000
 	return (x, y)
 
 def optimise_path(old_path):
@@ -208,7 +231,7 @@ def optimise_path(old_path):
 
 	list_index+=1
 
-	for i in range(1, old_path_length-2):
+	for i in range(1, old_path_length-1):
 		if((old_path[i][0] == old_path[i-1][0] and old_path[i][0] == old_path[i+1][0]) or (old_path[i][1] == old_path[i-1][1] and old_path[i][1] == old_path[i+1][1])):
 			# don't add to list
 			print("cell skipped")
@@ -225,10 +248,22 @@ def optimise_path(old_path):
 
 	return new_path
 
+# checks if the target coordinates are reached. Returns true if current x/y are near target x/y within set threshold
+def coordinates_reached(x,y,d_x,d_y):
+	
+	reached = False
+	if(distance_between_points(x,y,d_x,d_y) < .1):
+		reached = True
+	return reached
+	
+def distance_between_points(x1, y1, x2, y2):
+	return math.sqrt((x2 - x1)**2 + (y2 - y1)**2)
+
 
 
 def rosmap_to_map(rosmap):
-	global occupancy_grid
+	global occupancy_grid, actual_x, actual_y
+
 	width = rosmap.info.width
 	height = rosmap.info.height
 	
@@ -243,8 +278,8 @@ def rosmap_to_map(rosmap):
 	
 	g = occupancy_grid
 	
-	g_start = (1,1)
-	g_goal = (3,8)
+	g_start = (0,0)
+	g_goal = (3,2)
 	
 	came_from, cost_so_far = dijkstra_search(g, g_start, g_goal)
 	draw_grid(g, width=2, point_to=came_from, start=g_start, goal=g_goal)
@@ -267,20 +302,23 @@ def rosmap_to_map(rosmap):
 	print(len(optimised_path))
 
 	waypoint_index = 0
+	num_waypoints = len(optimised_path)
 
-	while(waypoint_index < len(optimised_path)-1):	#until we've reached the end of the path
+	while(waypoint_index < len(optimised_path)):	#until we've reached the end of the path
 
 		(d_x, d_y) = cell_to_coord(rosmap, optimised_path[waypoint_index][0], optimised_path[waypoint_index][1])
 
 		if(current_d_x == d_x and current_d_y == d_y):
+			#print("Current waypoint is target point!")
 			# if the navigation system has reached the coordinate
-			if(current_nav_string == nav_coords_reached):
+			if(coordinates_reached(d_x,d_y,actual_x,actual_y)):
 				print("Waypoint %d has been reached.") % waypoint_index
-				measure_temperature()
-				if(waypoint_index < num_waypoints):
+				if(waypoint_index <= num_waypoints):
 					waypoint_index += 1
 				else:
 					grid_finished = True
+			#else:
+				#print("Strings are not equal")
 		else:
 			#coordinate isn't set - set it
 			print("Move to cell: [%d, %d]") % (optimised_path[waypoint_index][0], optimised_path[waypoint_index][1])
@@ -291,9 +329,12 @@ def rosmap_to_map(rosmap):
 	
 def run():
 	rospy.init_node('mapConverter',anonymous=True)
+
+	(dp, ns) = pose_subscriber()
+
 	# subscribe to ros occupancy-grid topic
 	occupancy_grid_topic = rospy.Subscriber("mapBroadcaster", OccupancyGrid, rosmap_to_map)
-	desired_pose_update, nav_status_update = pose_subscriber()
+	
 	
 	key_pressed = False
 	rate = rospy.Rate(1)
@@ -302,8 +343,8 @@ def run():
 		key_pressed = select.select([sys.stdin], [], [], 0) == ([sys.stdin], [], []) # is key pressed?
 		rate.sleep()
 
-	desired_pose_update.unregister()
-	nav_status_update.unregister()
+	dp.unregister()
+	ns.unregister()
 	occupancy_grid_topic.unregister()
 
 

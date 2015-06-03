@@ -18,7 +18,7 @@ from std_msgs.msg import *
 
 # define settings
 WheelDiameter = 45.0	# wheel diameter in mm
-WheelBase = 230.0 * 2		# distance between wheels in mm
+WheelBase = 230.0 * 2 * 0.97		# distance between wheels in mm * calibration factor
 #--- Calculated (Theoretical) Value, ~ 0.442 mm / tick
 # DistancePerCount = (3.14159 *  WheelDiameter) / (320) # mm / encoder tick 
 
@@ -63,8 +63,6 @@ def wheel_callback(data):
 	left_encoder = data.data[2]
 	right_encoder = data.data[3]
 
-	
-	
 	#calculate the change in encoder values since last message received
 	if( _PreviousLeftEncoderCounts == 0 and _PreviousRightEncoderCounts == 0):
 		delta_left = 0
@@ -80,7 +78,7 @@ def wheel_callback(data):
 	#find angular velocity from relative wheel speeds
 	vth = -(delta_left - delta_right) / WheelBase
 
-	print('Wheel callback! LE: %d RE: %d DL: %d DR: %d vx: %.3f vy: %.3f vth: %.3f') % (left_encoder, right_encoder, delta_left, delta_right, vx, vy, vth)
+	#print('Wheel callback! LE: %d RE: %d DL: %d DR: %d vx: %.3f vy: %.3f vth: %.3f') % (left_encoder, right_encoder, delta_left, delta_right, vx, vy, vth)
 	
 	# compute odometry
 	dt = (current_time - last_time)	# time difference in seconds

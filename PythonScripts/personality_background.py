@@ -31,7 +31,7 @@ from geometry_msgs.msg import Point, Quaternion, PoseStamped, Pose
 import tf
 
 # My Modules
-import personality_functions as pf
+from OurModules import functions_personality as pf
 
 # SOUNDS
 sound_folder = '{0}/Documents/Sounds/PortalTurret/'.format(expanduser('~')) # folder that contains the sound file
@@ -84,7 +84,7 @@ def msg_subscriber():
 	#CP = rospy.Subscriber("currentPose", PoseStamped, current_pose_update)
 	EN = rospy.Subscriber("/mechbot_12/get/encoder_status", std_msgs.msg.Int32MultiArray,encoder_status_update)
 	IMU = rospy.Subscriber("/mechbot_12/get/IMU_status", std_msgs.msg.Float32MultiArray,imu_status_update)
-	MD = rospy.Subscriber("/mechbot_12/set/motor_drive", std_msgs.msg.UInt8MultiArray, motor_drive_update)
+	MD = rospy.Subscriber("/mechbot_12/set/motor_drive", std_msgs.msg.Int32MultiArray, motor_drive_update)
 	return (IMU, MD, EN)
 
 def imu_status_update(data):
@@ -95,11 +95,14 @@ def imu_status_update(data):
 	#print("IMU")
 	
 def motor_drive_update(data):
-	global last_action_time
+	global last_action_time, motor_direction, motor_speed_left, motor_speed_right
+
+	#print("motor drive update")
+
 	motor_direction = data.data[0]
 	motor_speed_left = data.data[1]
 	motor_speed_right = data.data[2]
-	last_action_time = time.time()
+	#last_action_time = time.time()
 	#print("MOTORS")
 
 def encoder_status_update(data):
@@ -158,6 +161,7 @@ def react_to_pushed():
 
 		# check again - now we can be more certain if this is deliberate
 		if(check_motors_stopped() == True and check_encoders_stopped() == False):
+			print("Motor speeds: %d %d, Encoder Values: %d %d") % ( motor_speed_left, motor_speed_right, encoder_left, encoder_right)
 			print("Quit pushing me around!")
 			if(time.time() - last_pickup_comment_time > pushed_comment_time_threshold):
 				# enough time has passed to make another remark...

@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 
-
 # system libraries
 import time
 import sys
@@ -17,7 +16,7 @@ object_name = '12Lgroup' # name of the object you are looking for on the Vicon s
 
 delay = 0.2 # update rate for main loop (s)
 
-v_pose = [0.0, 0.0, 0.0] # vicon pose data (x, y, yaw)
+v_pose = [-999.0, -999.0, 0.0] # vicon pose data (x, y, yaw)
 
 rospy.init_node("vicon_to_pose", anonymous=False) # name the script on the ROS network
 
@@ -54,23 +53,22 @@ def main():
         loop_start = time.time() # get loop time at start for loop rate calculations
         print("x: %.3f  y: %.3f  Th: %.1f") % (v_pose[0], v_pose[1], v_pose[2]) # print 2D pose data to terminal
 	
-	#publish pose data to ros topic
-	msg = PoseStamped()
+    	#create pose message
+    	msg = PoseStamped()
 
-	msg.header.stamp = rospy.Time.now()
-	msg.header.frame_id = 'world'
+    	msg.header.stamp = rospy.Time.now()
+    	msg.header.frame_id = 'world'
 
-	q = tf.transformations.quaternion_from_euler(0, 0, v_pose[2])
+    	q = tf.transformations.quaternion_from_euler(0, 0, v_pose[2])
 
-	msg.pose.position = Point(v_pose[0],v_pose[1],0)
+    	msg.pose.position = Point(v_pose[0],v_pose[1],0)
 
-	msg.pose.orientation.x = q[0]
-	msg.pose.orientation.y = q[1]
-	msg.pose.orientation.z = q[2]
-	msg.pose.orientation.w = q[3]
+    	msg.pose.orientation.x = q[0]
+    	msg.pose.orientation.y = q[1]
+    	msg.pose.orientation.z = q[2]
+    	msg.pose.orientation.w = q[3]
 
-	pose_pub.publish(msg)
-
+    	pose_pub.publish(msg)
 	
         loop_sleep = delay - (time.time() - loop_start) # if loop delay too low then will print data faster than updates are recieved
         if loop_sleep > 0:

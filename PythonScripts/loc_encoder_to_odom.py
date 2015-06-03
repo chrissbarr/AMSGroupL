@@ -122,20 +122,12 @@ def publish_odometry(x, y, th):
 	msg.pose.pose.orientation.z = q[2]
 	msg.pose.pose.orientation.w = q[3]
 
-	#msg.twist.twist.linear.x = vx
-	#msg.twist.twist.linear.y = vy
-	#msg.twist.twist.angular.z = vth
-
 	odom_pub.publish(msg)
-
 
 def main():
 	
-	
 	# subscribe to wheel encoder messages
 	encoder_ros_update = rospy.Subscriber("/mechbot_12/get/encoder_status", std_msgs.msg.Int32MultiArray, wheel_callback)
-	
-	
 	
 	rate = rospy.Rate(1)
 	

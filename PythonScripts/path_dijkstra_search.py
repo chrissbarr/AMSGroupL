@@ -16,6 +16,9 @@ from nav_msgs.msg import OccupancyGrid
 from geometry_msgs.msg import Point, Quaternion, PoseStamped, Pose
 import tf
 
+from OurModules import functions_ros_interfaces as ri
+from OurModules import functions_common as cf
+
 # NAVIGATION STATUS MESSAGES
 nav_coords_reached = 'CR'
 nav_move_in_progress = 'MOVING'
@@ -91,53 +94,6 @@ class PriorityQueue:
 	
 	def get(self):
 		return heapq.heappop(self.elements)[1]
-
-def pose_subscriber():
-	# subscribe to ROS data updates
-	CP = rospy.Subscriber("currentPose", PoseStamped, current_pose_update)
-	DP = rospy.Subscriber("desiredPose", Pose, desired_pose_update)
-	NS = rospy.Subscriber("/nav_status", std_msgs.msg.String, nav_status_update)
-	return (DP, NS)
-
-def desired_pose_update(data):
-	global current_d_x, current_d_y, current_d_th
-
-	# read in position
-	current_d_x = data.position.x
-	current_d_y = data.position.y
-	
-	# read in orientation
-	q = (
-	    data.orientation.x,
-	    data.orientation.y,
-	    data.orientation.z,
-	    data.orientation.w)
-	    
-	# convert orientation from quaternion to euler angles, read yaw
-	euler = tf.transformations.euler_from_quaternion(q)
-	current_d_th = euler[2]
-
-def current_pose_update(data):
-	global actual_x, actual_y, actual_th
-
-	# read in position
-	actual_x = data.pose.position.x
-	actual_y = data.pose.position.y
-	
-	# read in orientation
-	q = (
-	    data.pose.orientation.x,
-	    data.pose.orientation.y,
-	    data.pose.orientation.z,
-	    data.pose.orientation.w)
-	
-	# convert orientation from quaternion to euler angles, read yaw
-	euler = tf.transformations.euler_from_quaternion(q)
-	actual_th = euler[2]
-	
-def nav_status_update(message):
-	global current_nav_string
-	current_nav_string = message.data
 
 def send_desired_pose(x, y, th):
     print("Requesting move to point: x: %.3f  y: %.3f  Th: %.1f") % (x, y, th) # print 2D pose data to terminal
@@ -232,15 +188,12 @@ def optimise_path(old_path):
 	list_index+=1
 
 	for i in range(1, old_path_length-1):
-		if((old_path[i][0] == old_path[i-1][0] and old_path[i][0] == old_path[i+1][0]) or (old_path[i][1] == old_path[i-1][1] and old_path[i][1] == old_path[i+1][1])):
-			# don't add to list
-			print("cell skipped")
-		else:
+		if not ((old_path[i][0] == old_path[i-1][0] and old_path[i][0] == old_path[i+1][0]) or (old_path[i][1] == old_path[i-1][1] and old_path[i][1] == old_path[i+1][1])):
 			new_path.append([])
 			new_path[list_index].append(old_path[i][0])
 			new_path[list_index].append(old_path[i][1])
 
-			list_index+=1
+			list_index+=1	
 
 	new_path.append([])
 	new_path[list_index].append(old_path[old_path_length-1][0])
@@ -252,14 +205,9 @@ def optimise_path(old_path):
 def coordinates_reached(x,y,d_x,d_y):
 	
 	reached = False
-	if(distance_between_points(x,y,d_x,d_y) < .1):
+	if(cf.distance_between_points(x,y,d_x,d_y) < .1):
 		reached = True
 	return reached
-	
-def distance_between_points(x1, y1, x2, y2):
-	return math.sqrt((x2 - x1)**2 + (y2 - y1)**2)
-
-
 
 def rosmap_to_map(rosmap):
 	global occupancy_grid, actual_x, actual_y
@@ -308,10 +256,10 @@ def rosmap_to_map(rosmap):
 
 		(d_x, d_y) = cell_to_coord(rosmap, optimised_path[waypoint_index][0], optimised_path[waypoint_index][1])
 
-		if(current_d_x == d_x and current_d_y == d_y):
+		if(ri.target_x == d_x and ri.target_y == d_y):
 			#print("Current waypoint is target point!")
 			# if the navigation system has reached the coordinate
-			if(coordinates_reached(d_x,d_y,actual_x,actual_y)):
+			if(coordinates_reached(d_x,d_y,ri.current_x,ri.current_y)):
 				print("Waypoint %d has been reached.") % waypoint_index
 				if(waypoint_index <= num_waypoints):
 					waypoint_index += 1
@@ -329,8 +277,7 @@ def rosmap_to_map(rosmap):
 	
 def run():
 	rospy.init_node('mapConverter',anonymous=True)
-
-	(dp, ns) = pose_subscriber()
+	ri.init()
 
 	# subscribe to ros occupancy-grid topic
 	occupancy_grid_topic = rospy.Subscriber("mapBroadcaster", OccupancyGrid, rosmap_to_map)

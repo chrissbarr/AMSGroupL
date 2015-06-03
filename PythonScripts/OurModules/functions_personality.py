@@ -23,9 +23,6 @@ from os.path import expanduser
 import random
 from random import randint
 
-
-
-
 # SOUNDS
 sound_folder = '{0}/Documents/Sounds/PortalTurret/'.format(expanduser('~')) # folder that contains the sound file
 sound_group_startup = ['turret_deploy_2.ogg','turret_deploy_4.ogg']

@@ -32,6 +32,8 @@ from os.path import expanduser
 import sys
 import os
 
+from OurModules import functions_motor_control as motor
+
 # ROS libraries
 import rospy
 import std_msgs.msg
@@ -65,7 +67,6 @@ sensor_equation_exponent = [-1.252, -1.052, -1.199, -1.251]
 
 rospy.init_node("ObjectAvoid", anonymous=False) # name the script on the ROS network
 
-pub = rospy.Publisher('/%s/set/motor_drive' % socket.gethostname(), std_msgs.msg.Int32MultiArray, queue_size=10) # sets up the topic for publishing the motor commands
 time.sleep(0.1) # delay
 
 
@@ -105,15 +106,6 @@ def motor_update(data):
     m_r = m_l#data.data[2]  #right speed
 
     print("%s") % (m_d)
-
-def publish_motor_command(md_d, md_l, md_r): # send a command to the motors (direction, left_speed, right_speed)
-	motor_data = std_msgs.msg.Int32MultiArray() # definitions in std_msgs.msg - data to be published need to be in ROS format
-	motor_data.data = [1,0,0,1]
-	motor_data.data[0] = int(md_d)
-	motor_data.data[1] = int(md_l)
-	motor_data.data[2] = int(md_r)
-	print("Motor data published! (%d, %d, %d)") % (md_d, md_l, md_r)
-	pub.publish(motor_data) # publish motor command to ROS
     
 def obstacle_in_direction(dir):
     """
@@ -121,7 +113,7 @@ def obstacle_in_direction(dir):
     Direction 0 = in front, 1 = behind, 2 = right and 3 = left
     """
     if(dir == 0):   # is there something in front of the robot?
-        if(ir_sensor4 < 90 or us_left < 1500 or us_right < 1500):
+        if(ir_sensor4 < 90 or us_left < 1200 or us_right < 1200):
             return True
         else:
             return False
@@ -155,28 +147,28 @@ def main():
             print("Obstacle Ahead: %s | Behind: %s | Right: %s | Left: %s") % (obstacle_in_direction(0), obstacle_in_direction(1), obstacle_in_direction(2), obstacle_in_direction(3))
             if(obstacle_in_direction(m_d) == False):  
                 print("Nothing in the way - proceed as normal!")
-                publish_motor_command(m_d,m_l,m_r)   #pass motor commands through transparently
+                motor.publish_command_direct(m_d,m_l,m_r)   #pass motor commands through transparently
             else:
                 print("We can't go that way right now!")
                 #we can't drive that way right now, so let's do something else instead.
                 #first we rotate until the way ahead is clear
                 while(obstacle_in_direction(m_d) == True):
-                    publish_motor_command(default_turn_direc,default_turn_speed,default_turn_speed)
+                    motor.publish_command_direct(default_turn_direc,default_turn_speed,default_turn_speed)
                     time.sleep(0.3)
 
                 #then we drive forwards (or backwards) until it looks like we're past the obstacle, or if we're going to hit something!
                 while(obstacle_in_direction(m_d) == False and (obstacle_in_direction(2) == True or obstacle_in_direction(3) == True)):
-                    publish_motor_command(m_d,m_l,m_r)
+                    motor.publish_command_direct(m_d,m_l,m_r)
                     time.sleep(0.2)
         else:
-        	publish_motor_command(m_d,m_l,m_r)   #pass motor commands through transparently
+        	motor.publish_command_direct(m_d,m_l,m_r)   #pass motor commands through transparently
 
         time.sleep(.1)
         key_pressed = select.select([sys.stdin], [], [], 0) == ([sys.stdin], [], []) # is key pressed?
 
-    publish_motor_command(0, 0, 0) # stop
+    motor.publish_command_direct(0, 0, 0) # stop
     rospy.sleep(0.5)
-    publish_motor_command(0, 0, 0) # stop
+    motor.publish_command_direct(0, 0, 0) # stop
     ros_update_1.unregister() # unregister from update 1
     ros_update_2.unregister() # unregister from update 1
     ros_update_3.unregister() # unregister from update 1

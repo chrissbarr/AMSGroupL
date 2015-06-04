@@ -44,6 +44,7 @@ sound_group_pickup = ['turret_pickup_3.ogg','turret_pickup_8.ogg','turret_pickup
 sound_group_push = ['turretsquashed04.ogg','turretsquashed06.ogg','turretshotbylaser07.ogg']
 sound_group_ping = ['ping.ogg']
 sound_group_lonely = ['turret_search_1.ogg','turret_autosearch_5.ogg']
+sound_group_hello = ['sp_sabotage_factory_good_pass01.ogg','sp_sabotage_factory_template01.ogg']
 
 # IMU
 acc_x = -999
@@ -60,7 +61,9 @@ talkativity = 1.0
 pickup_threshold = .2	# z-accel value needed to trigger 'pick-up' event
 pickup_comment_time_threshold = 8	# minimum time between 'pick-up' remarks
 pushed_comment_time_threshold = 4
+handshake_comment_time_threshold = 4
 last_pickup_comment_time = 0	# tracks time last comment was made
+last_handshake_comment_time = 0
 last_played_sound = 'none'
 
 last_action_time = time.time()
@@ -72,11 +75,13 @@ motor_direction = 0
 motor_speed_left = 0
 motor_speed_right = 0
 
+## Gripper Force Variable
+gripper_force = 0
+
 delay = 0.1 # update rate for main loop (s)
 
 rospy.init_node("personality_controller", anonymous=False) # name the script on the ROS network
 
-# setup publishing pose messages
 
 
 def msg_subscriber():
@@ -85,6 +90,7 @@ def msg_subscriber():
 	EN = rospy.Subscriber("/mechbot_12/get/encoder_status", std_msgs.msg.Int32MultiArray,encoder_status_update)
 	IMU = rospy.Subscriber("/mechbot_12/get/IMU_status", std_msgs.msg.Float32MultiArray,imu_status_update)
 	MD = rospy.Subscriber("/mechbot_12/set/motor_drive", std_msgs.msg.Int32MultiArray, motor_drive_update)
+	GR = rospy.Subscriber("/mechbot_12/get/force_status", std_msgs.msg.Float32MultiArray, force_status_update)
 	return (IMU, MD, EN)
 
 def imu_status_update(data):
@@ -115,6 +121,11 @@ def encoder_status_update(data):
 	if(encoder_left != 0 or encoder_right != 0):
 		last_action_time = time.time()
 	#print("ENCODERS")
+
+def force_status_update(data):
+	global gripper_force
+	gripper_force = data.data[0]
+	#print("gripper update %f") % gripper_force
 
 def loop_timing(delay,loop_start):
 	loop_sleep = delay - (time.time() - loop_start) # if loop delay too low then will print data faster than updates are recieved
@@ -176,8 +187,17 @@ def react_to_lonely():
 	global last_action_time, lonely_threshold_time
 	if(time.time() - last_action_time > lonely_threshold_time):
 		print("Getting lonely here...")
-		pf.play_sound_group(sound_group_lonely,50)
+		pf.play_sound_group(sound_group_lonely,30)
 		last_action_time = time.time()
+
+def react_to_gripper_squeeze():
+	global last_handshake_comment_time, handshake_comment_time_threshold
+	if(gripper_force > 200):
+		if(time.time() - last_handshake_comment_time > handshake_comment_time_threshold):
+			print("Handshake?")
+			pf.play_sound_group(sound_group_hello,100)
+			last_action_time = time.time()
+			last_handshake_comment_time = time.time()
 
 def personality_core_init():
 	random.seed()
@@ -190,6 +210,7 @@ def personality_core_update():
 	react_to_pickup()
 	react_to_lonely()
 	react_to_pushed()
+	react_to_gripper_squeeze()
 	
 def personality_core_shutdown():
 	pf.play_sound_group(sound_group_shutdown,100)

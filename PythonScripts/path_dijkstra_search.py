@@ -18,6 +18,7 @@ import tf
 
 from OurModules import functions_ros_interfaces as ri
 from OurModules import functions_common as cf
+from OurModules	import functions_nav_control as nav
 
 # setup publishing pose messages
 pose_pub = rospy.Publisher('desiredPose', Pose, queue_size=10)
@@ -69,20 +70,8 @@ class PriorityQueue:
 		return heapq.heappop(self.elements)[1]
 
 def send_desired_pose(x, y, th):
-    print("Requesting move to point: x: %.3f  y: %.3f  Th: %.1f") % (x, y, th) # print 2D pose data to terminal
-    #publish pose data to ros topic
-    msg = Pose()
-
-    q = tf.transformations.quaternion_from_euler(0, 0, th)
-
-    msg.position = Point(x,y,0)
-
-    msg.orientation.x = q[0]
-    msg.orientation.y = q[1]
-    msg.orientation.z = q[2]
-    msg.orientation.w = q[3]
-
-    pose_pub.publish(msg)
+	print("Requesting move to point: x: %.3f  y: %.3f  Th: %.1f") % (x, y, th) # print 2D pose data to terminal
+	nav.send_target_pose(x,y,th)
 		
 def dijkstra_search(graph, start, goal):
 	frontier = PriorityQueue()
@@ -254,7 +243,6 @@ def run():
 	# subscribe to ros occupancy-grid topic
 	occupancy_grid_topic = rospy.Subscriber("mapBroadcaster", OccupancyGrid, rosmap_to_map)
 	
-	
 	key_pressed = False
 	rate = rospy.Rate(1)
 	
@@ -262,8 +250,6 @@ def run():
 		key_pressed = select.select([sys.stdin], [], [], 0) == ([sys.stdin], [], []) # is key pressed?
 		rate.sleep()
 
-	dp.unregister()
-	ns.unregister()
 	occupancy_grid_topic.unregister()
 if __name__=='__main__':
 	try:

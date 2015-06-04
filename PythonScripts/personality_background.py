@@ -32,6 +32,7 @@ import tf
 
 # My Modules
 from OurModules import functions_personality as pf
+from OurModules import functions_servo_control as servo
 
 # SOUNDS
 sound_folder = '{0}/Documents/Sounds/PortalTurret/'.format(expanduser('~')) # folder that contains the sound file
@@ -57,7 +58,6 @@ encoder_right = 0
 
 # PERSONALITY CORE SETTINGS
 talkativity = 1.0
-
 pickup_threshold = .2	# z-accel value needed to trigger 'pick-up' event
 pickup_comment_time_threshold = 8	# minimum time between 'pick-up' remarks
 pushed_comment_time_threshold = 4
@@ -65,7 +65,6 @@ handshake_comment_time_threshold = 4
 last_pickup_comment_time = 0	# tracks time last comment was made
 last_handshake_comment_time = 0
 last_played_sound = 'none'
-
 last_action_time = time.time()
 lonely_threshold_time = 60
 
@@ -81,8 +80,6 @@ gripper_force = 0
 delay = 0.1 # update rate for main loop (s)
 
 rospy.init_node("personality_controller", anonymous=False) # name the script on the ROS network
-
-
 
 def msg_subscriber():
 	# subscribe to ROS data updates
@@ -205,6 +202,8 @@ def personality_core_init():
 	time.sleep(1)
 	print("Hello! Personality Core initialised!")
 	pf.play_sound_group(sound_group_startup,100)
+	pf.block_wait_sound_finish()
+	servo.publish_servo(1000,550)	#move servo arm out of way for navigation / object avoidance
 
 def personality_core_update():
 	react_to_pickup()
@@ -220,7 +219,6 @@ def personality_core_shutdown():
 
 	pygame.mixer.quit()
 	
-
 def main(argv):
 	key_pressed = False
 	
@@ -240,9 +238,7 @@ def main(argv):
 	update1.unregister()
 	update2.unregister()
 	update3.unregister()
-	personality_core_shutdown()
-	
-	
+	personality_core_shutdown()	
 
 if __name__ == '__main__': # main loop
 	try: # if no problems

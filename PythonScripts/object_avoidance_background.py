@@ -51,6 +51,7 @@ m_d = 0
 m_l = 0
 m_r = 0
 
+avoid_obstacles = False #if false, script acts as direct pass-through for motor commands
 
 ir_sensor1 = 0
 ir_sensor2 = 0
@@ -105,6 +106,9 @@ def motor_update(data):
     m_l = data.data[1] #left speed
     m_r = m_l#data.data[2]  #right speed
 
+    if not (avoid_obstacles):
+            motor.publish_command_direct(m_d,m_l,m_r)
+
     #print("%s") % (m_d)
     
 def obstacle_in_direction(dir):
@@ -142,26 +146,26 @@ def main():
 	
     while key_pressed == False:
         
-        
-        if((m_d == 0 or m_d == 1) and (m_l != 0 or m_r != 0)):   #if we're moving forwards or back (and motors are at non-zero speeds)
-            #print("Obstacle Ahead: %s | Behind: %s | Right: %s | Left: %s") % (obstacle_in_direction(0), obstacle_in_direction(1), obstacle_in_direction(2), obstacle_in_direction(3))
-            if(obstacle_in_direction(m_d) == False):  
-                #print("Nothing in the way - proceed as normal!")
-                motor.publish_command_direct(m_d,m_l,m_r)   #pass motor commands through transparently
-            else:
-                print("We can't go that way right now!")
-                #we can't drive that way right now, so let's do something else instead.
-                #first we rotate until the way ahead is clear
-                while(obstacle_in_direction(m_d) == True):
-                    motor.publish_command_direct(default_turn_direc,default_turn_speed,default_turn_speed)
-                    time.sleep(0.3)
+        if(avoid_obstacles):
+            if((m_d == 0 or m_d == 1) and (m_l != 0 or m_r != 0)):   #if we're moving forwards or back (and motors are at non-zero speeds)
+                #print("Obstacle Ahead: %s | Behind: %s | Right: %s | Left: %s") % (obstacle_in_direction(0), obstacle_in_direction(1), obstacle_in_direction(2), obstacle_in_direction(3))
+                if(obstacle_in_direction(m_d) == False):  
+                    #print("Nothing in the way - proceed as normal!")
+                    motor.publish_command_direct(m_d,m_l,m_r)   #pass motor commands through transparently
+                else:
+                    print("We can't go that way right now!")
+                    #we can't drive that way right now, so let's do something else instead.
+                    #first we rotate until the way ahead is clear
+                    while(obstacle_in_direction(m_d) == True):
+                        motor.publish_command_direct(default_turn_direc,default_turn_speed,default_turn_speed)
+                        time.sleep(0.3)
 
-                #then we drive forwards (or backwards) until it looks like we're past the obstacle, or if we're going to hit something!
-                while(obstacle_in_direction(m_d) == False and (obstacle_in_direction(2) == True or obstacle_in_direction(3) == True)):
-                    motor.publish_command_direct(m_d,m_l,m_r)
-                    time.sleep(0.2)
-        else:
-        	motor.publish_command_direct(m_d,m_l,m_r)   #pass motor commands through transparently
+                    #then we drive forwards (or backwards) until it looks like we're past the obstacle, or if we're going to hit something!
+                    while(obstacle_in_direction(m_d) == False and (obstacle_in_direction(2) == True or obstacle_in_direction(3) == True)):
+                        motor.publish_command_direct(m_d,m_l,m_r)
+                        time.sleep(0.2)
+            else:
+            	motor.publish_command_direct(m_d,m_l,m_r)   #pass motor commands through transparently
 
         time.sleep(.1)
         key_pressed = select.select([sys.stdin], [], [], 0) == ([sys.stdin], [], []) # is key pressed?

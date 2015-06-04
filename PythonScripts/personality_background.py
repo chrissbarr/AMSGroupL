@@ -67,6 +67,7 @@ last_handshake_comment_time = 0
 last_played_sound = 'none'
 last_action_time = time.time()
 lonely_threshold_time = 120
+motors_last_active_time = 0
 
 # MOTOR SPEED VARIABLES
 # Only used to check current motor speed
@@ -107,6 +108,7 @@ def motor_drive_update(data):
 	motor_speed_right = data.data[2]
 	if(motor_speed_left != 0 or motor_speed_right != 0):
 		last_action_time = time.time()
+		motors_last_active_time = time.time()
 	#print("MOTORS")
 
 def encoder_status_update(data):
@@ -168,10 +170,10 @@ def react_to_pushed():
 	if(check_motors_stopped() == True and check_encoders_stopped() == False):
 
 		# wait a little bit, otherwise we'd detect the mechbot's stopping motions (motors told off but wheels still move for a moment)
-		time.sleep(0.5)
+		time.sleep(0.2)
 
 		# check again - now we can be more certain if this is deliberate
-		if(check_motors_stopped() == True and check_encoders_stopped() == False):
+		if(check_motors_stopped() == True and check_encoders_stopped() == False and time.time() - motors_last_active_time < 2):
 			print("Motor speeds: %d %d, Encoder Values: %d %d") % ( motor_speed_left, motor_speed_right, encoder_left, encoder_right)
 			print("Quit pushing me around!")
 			if(time.time() - last_pickup_comment_time > pushed_comment_time_threshold):

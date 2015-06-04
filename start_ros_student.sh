@@ -34,10 +34,10 @@
 # Shortcut variables.
 ENTER="$(printf \\r)"
 
-While ! ping -c 1 -w 1 10.128.0.22; do
-	echo "Waiting for IP..."
-	sleep(1)
-done
+#While ! ping -c 1 -w 1 10.128.0.22; do
+#	echo "Waiting for IP..."
+#	sleep(1)
+#done
 
 # Open all required screen sessions.
 screen -dmS roscore
@@ -82,4 +82,7 @@ screen -dmS object_avoidance_screen
 screen -S object_avoidance_screen -p 0 -X stuff "python /home/odroid/python_scripts/object_avoidance_background.py $ENTER"
 
 screen -dmS nav_pilot_screen
-screen -S object_avoidance_screen -p 0 -X stuff "python /home/odroid/python_scripts/nav_pilot.py $ENTER"
+screen -S nav_pilot_screen -p 0 -X stuff "python /home/odroid/python_scripts/nav_pilot.py $ENTER"
+
+screen -dmS vicon_to_pose
+screen -S vicon_to_pose -p 0 -X stuff "python /home/odroid/python_scripts/loc_vicon_to_pose.py $ENTER"

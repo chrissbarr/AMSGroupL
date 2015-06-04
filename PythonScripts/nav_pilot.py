@@ -33,7 +33,8 @@ import tf
 distance_threshold = 0.1 # units are in metres, reached target if x & y within 0.1 = 10cm of target position
 rot_threshold = 0.2	# angle in radians, consider heading correct if within this number of radians to target point
 travel_heading_error_window = 0.5 # If angle to target > this during travel, robot will stop and reorient
-base_speed = 100 # Default speed robot travels at. Left and right motors are biased from this value to adjust steering.
+base_speed = 80 # Default speed robot travels at. Left and right motors are biased from this value to adjust steering.
+max_speed = 100
 
 #rotation settings
 rot_P = 20.0
@@ -125,6 +126,12 @@ def main(argv):
 						#adjust motors to aim towards target point
 						motor_left_speed = base_speed - (heading_error * driving_P + driving_error_sum * driving_I)
 						motor_left_right = base_speed + (heading_error * driving_P + driving_error_sum * driving_I)
+
+						if(motor_left_speed > max_speed):
+							motor_left_speed = max_speed
+						if(motor_right_speed > max_speed):
+							motor_right_speed = max_speed
+						
 						driving_error_sum += heading_error
 						motor.publish_command(0,motor_left_speed,motor_left_right)
 			else:

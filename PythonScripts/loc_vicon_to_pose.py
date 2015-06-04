@@ -22,7 +22,7 @@ rospy.init_node("vicon_to_pose", anonymous=False) # name the script on the ROS n
 
 
 # setup publishing pose messages
-pose_pub = rospy.Publisher('currentPose', PoseStamped, queue_size=10)
+pose_pub = rospy.Publisher('viconPose', PoseStamped, queue_size=10)
 odom_broadcaster = tf.TransformBroadcaster()
 
 # subroutines
@@ -34,12 +34,30 @@ def vicon_update(data):
         v_pose[1] = float(words[2])/1000 # y 
         v_pose[2] = float(words[6]) # yaw, keep in rad in range (pi, -pi)
 
+        publish_pose(v_pose[0],v_pose[1],v_pose[2])
 	
 def subscriber():
     # subscribe to ROS data updates
     VS = rospy.Subscriber("/mechbot_12/get/vicon_pose", std_msgs.msg.String, vicon_update)
     return (VS)
 
+def publish_pose(x, y, th):
+    #create pose message
+        msg = PoseStamped()
+
+        msg.header.stamp = rospy.Time.now()
+        msg.header.frame_id = 'world'
+
+        q = tf.transformations.quaternion_from_euler(0, 0, th)
+
+        msg.pose.position = Point(x,y,0)
+
+        msg.pose.orientation.x = q[0]
+        msg.pose.orientation.y = q[1]
+        msg.pose.orientation.z = q[2]
+        msg.pose.orientation.w = q[3]
+
+        pose_pub.publish(msg)
 
 # main program
 
@@ -51,24 +69,7 @@ def main():
 	
     while key_pressed == False:
         loop_start = time.time() # get loop time at start for loop rate calculations
-        print("x: %.3f  y: %.3f  Th: %.1f") % (v_pose[0], v_pose[1], v_pose[2]) # print 2D pose data to terminal
-	
-    	#create pose message
-    	msg = PoseStamped()
-
-    	msg.header.stamp = rospy.Time.now()
-    	msg.header.frame_id = 'world'
-
-    	q = tf.transformations.quaternion_from_euler(0, 0, v_pose[2])
-
-    	msg.pose.position = Point(v_pose[0],v_pose[1],0)
-
-    	msg.pose.orientation.x = q[0]
-    	msg.pose.orientation.y = q[1]
-    	msg.pose.orientation.z = q[2]
-    	msg.pose.orientation.w = q[3]
-
-    	pose_pub.publish(msg)
+        #print("x: %.3f  y: %.3f  Th: %.1f") % (v_pose[0], v_pose[1], v_pose[2]) # print 2D pose data to terminal
 	
         loop_sleep = delay - (time.time() - loop_start) # if loop delay too low then will print data faster than updates are recieved
         if loop_sleep > 0:

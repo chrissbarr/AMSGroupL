@@ -106,7 +106,7 @@ def target_pose_update(data):
 	target_th = euler[2]
 
 def current_pose_initialise():
-	PS = rospy.Subscriber("currentPose", PoseStamped, current_pose_update)
+	PS = rospy.Subscriber("viconPose", PoseStamped, current_pose_update)
 
 def target_pose_initialise():
 	DP = rospy.Subscriber("targetPose", Pose, target_pose_update)

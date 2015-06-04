@@ -102,7 +102,8 @@ def motor_drive_update(data):
 	motor_direction = data.data[0]
 	motor_speed_left = data.data[1]
 	motor_speed_right = data.data[2]
-	#last_action_time = time.time()
+	if(motor_speed_left != 0 or motor_speed_right != 0):
+		last_action_time = time.time()
 	#print("MOTORS")
 
 def encoder_status_update(data):
@@ -110,7 +111,9 @@ def encoder_status_update(data):
 	global encoder_left, encoder_right
 	encoder_left = data.data[0]
 	encoder_right = data.data[1]
-	last_action_time = time.time()
+
+	if(encoder_left != 0 or encoder_right != 0):
+		last_action_time = time.time()
 	#print("ENCODERS")
 
 def loop_timing(delay,loop_start):

@@ -12,9 +12,7 @@ import tf
 import socket
 import math
 
-#import std_msgs.msg
 from std_msgs.msg import *
-
 
 # define settings
 WheelDiameter = 45.0	# wheel diameter in mm

@@ -120,9 +120,7 @@ def measure_temperature():
 def main(argv):
 	key_pressed = False
 	
-	#subscribe to the relevant ROS topics
-	(desired_pose_update, nav_status_update) = msg_subscriber()
-	fp.sound_init()
+	personality.sound_init()
 	
 	# First, generate the search grid
 	grid, num_waypoints = generate_search_grid(1,2,5,4,0.25,4)
@@ -137,16 +135,15 @@ def main(argv):
 		d_y = grid[waypoint_index][1]
 		d_th = grid[waypoint_index][2]
 		
-		if(current_d_x == d_x and current_d_y == d_y and current_d_th == d_th):
+		if(ri.current_x == d_x and ri.current_y == d_y and ri.current_th == d_th):
 			# if the navigation system has reached the coordinate
-			if(current_nav_string == nav_coords_reached):
-				print("Waypoint %d has been reached.") % waypoint_index
-				measure_temperature()
-				if(waypoint_index < num_waypoints):
-					waypoint_index += 1
-					personality.play_sound_group(sound_group_search,5)
-				else:
-					grid_finished = True
+			print("Waypoint %d has been reached.") % waypoint_index
+			measure_temperature()
+			if(waypoint_index < num_waypoints):
+				waypoint_index += 1
+				personality.play_sound_group(sound_group_search,5)
+			else:
+				grid_finished = True
 		else:
 			#coordinate isn't set - set it
 			nav.send_target_pose(d_x, d_y, d_th)

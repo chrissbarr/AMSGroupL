@@ -34,14 +34,14 @@ initialise_odom_to_vicon = True #if true odometry will wait for Vicon before upd
 
 current_x = current_y = current_th = target_x = target_y = target_th = -999
 odom_x = odom_y = odom_th = -999
-odom_offset_x = odom_offset_y = odom_offset_th 0
+odom_offset_x = odom_offset_y = odom_offset_th = 0
 
 def odom_update(data):
 	global odom_x, odom_y, odom_th
 
 	if(initialise_odom_to_vicon):
 		if(current_x != -999 and current_y != -999):	# Vicon data is published
-			if(odom_x = -999 and odom_y = -999):
+			if(odom_x == -999 and odom_y == -999):
 				odom_offset_x = current_x
 				odom_offset_y = current_y
 				odom_offset_th = current_th

@@ -34,6 +34,11 @@
 # Shortcut variables.
 ENTER="$(printf \\r)"
 
+While ! ping -c 1 -w 1 10.128.0.22; do
+	echo "Waiting for IP..."
+	sleep(1)
+done
+
 # Open all required screen sessions.
 screen -dmS roscore
 screen -dmS rosserial

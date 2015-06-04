@@ -19,20 +19,6 @@ import tf
 from OurModules import functions_ros_interfaces as ri
 from OurModules import functions_common as cf
 
-# NAVIGATION STATUS MESSAGES
-nav_coords_reached = 'CR'
-nav_move_in_progress = 'MOVING'
-current_nav_string = ''
-
-# DESIRED NAVIGATION COORDINATES
-actual_x = 0
-actual_y = 0
-actual_th = 0
-
-current_d_x = 0		#from desired pose topic
-current_d_y = 0
-current_d_th = 0
-
 # setup publishing pose messages
 pose_pub = rospy.Publisher('desiredPose', Pose, queue_size=10)
 odom_broadcaster = tf.TransformBroadcaster()

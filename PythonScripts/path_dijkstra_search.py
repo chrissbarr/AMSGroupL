@@ -69,19 +69,6 @@ class SquareGrid:
 	def cost(self, a, b):
 		return self.weights.get(b, 1)
 		
-class Queue:
-	def __init__(self):
-		self.elements = collections.deque()
-	
-	def empty(self):
-		return len(self.elements) == 0
-	
-	def put(self, x):
-		self.elements.append(x)
-	
-	def get(self):
-		return self.elements.popleft()
-		
 class PriorityQueue:
 	def __init__(self):
 		self.elements = []
@@ -274,7 +261,6 @@ def rosmap_to_map(rosmap):
 
 		time.sleep(0.5)
 	
-	
 def run():
 	rospy.init_node('mapConverter',anonymous=True)
 	ri.init()
@@ -293,8 +279,6 @@ def run():
 	dp.unregister()
 	ns.unregister()
 	occupancy_grid_topic.unregister()
-
-
 if __name__=='__main__':
 	try:
 		run()

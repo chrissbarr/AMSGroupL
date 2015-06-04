@@ -90,7 +90,7 @@ def main(argv):
 		
 		# calculate angular difference
 		target_heading = cf.angle_between_points(ri.current_x,ri.current_y,ri.target_x,ri.target_y)
-		heading_error = cf.angular_difference(target_heading,ri.current_th)
+		heading_error = cf.angular_difference(target_heading, ri.current_th)
 		
 		if(ri.target_x != -999 and ri.target_y != -999):
 			print("Current Position: %.3f %.3f %.3f | Target Position: %.3f %.3f %.3f | Heading Error: %.3f") % (ri.current_x,ri.current_y,ri.current_th,ri.target_x,ri.target_y,ri.target_th,heading_error)
@@ -138,9 +138,9 @@ def main(argv):
 					print("Motors stopped!")
 					
 				# now, turn to face the desired heading (if there is one)	
-				heading_offset = angular_difference(d_th,th)
+				heading_offset = cf.angular_difference(ri.target_th,ri.current_th)
 				
-				if(d_th != -999 and math.fabs(heading_offset) > rot_threshold):	#-999 means orientation doesn't matter, otherwise turn
+				if(ri.target_th != -999 and math.fabs(heading_offset) > rot_threshold):	#-999 means orientation doesn't matter, otherwise turn
 					print("Matching desired orientation...")
 					turn_to_face(heading_offset)
 				else:

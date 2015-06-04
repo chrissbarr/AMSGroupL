@@ -67,7 +67,7 @@ def turn_to_face(heading_error):
 	motor_speed = int(round(rot_P * math.fabs(heading_error))) + rot_speed_offset
 	#rot_error_sum += heading_error
 
-	if(heading_error => 0):
+	if(heading_error >= 0):
 		rot = 3
 	if(heading_error < 0):
 		rot = 2

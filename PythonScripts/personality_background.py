@@ -179,6 +179,7 @@ def react_to_lonely():
 def personality_core_init():
 	random.seed()
 	pf.sound_init()
+	time.sleep(1)
 	print("Hello! Personality Core initialised!")
 	pf.play_sound_group(sound_group_startup,100)
 

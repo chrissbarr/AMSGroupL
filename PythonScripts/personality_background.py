@@ -58,7 +58,7 @@ encoder_right = 0
 
 # PERSONALITY CORE SETTINGS
 talkativity = 1.0
-pickup_threshold = .2	# z-accel value needed to trigger 'pick-up' event
+pickup_threshold = .3	# z-accel value needed to trigger 'pick-up' event
 pickup_comment_time_threshold = 8	# minimum time between 'pick-up' remarks
 pushed_comment_time_threshold = 4
 handshake_comment_time_threshold = 4
@@ -66,7 +66,7 @@ last_pickup_comment_time = 0	# tracks time last comment was made
 last_handshake_comment_time = 0
 last_played_sound = 'none'
 last_action_time = time.time()
-lonely_threshold_time = 60
+lonely_threshold_time = 120
 
 # MOTOR SPEED VARIABLES
 # Only used to check current motor speed

@@ -17,7 +17,10 @@ import std_msgs.msg
 from geometry_msgs.msg import Point, Quaternion, PoseStamped, Pose
 import tf
 
+target_x = target_y = target_th = -999
+
 pose_pub = rospy.Publisher('targetPose', Pose, queue_size=10)
+
 
 # send target pose
 def send_target_pose(x, y, th):
@@ -35,3 +38,28 @@ def send_target_pose(x, y, th):
     msg.orientation.w = q[3]
 
     pose_pub.publish(msg)
+
+def target_pose_update(data):
+    global target_x, target_y, target_th
+
+    # read in position
+    target_x = data.position.x
+    target_y = data.position.y
+    
+    # read in orientation
+    q = (
+        data.orientation.x,
+        data.orientation.y,
+        data.orientation.z,
+        data.orientation.w)
+        
+    # convert orientation from quaternion to euler angles, read yaw
+    euler = tf.transformations.euler_from_quaternion(q)
+    target_th = euler[2]
+
+def target_pose_subscribe():
+    DP = rospy.Subscriber("targetPose", Pose, target_pose_update)
+
+def init():
+    target_pose_subscribe()
+

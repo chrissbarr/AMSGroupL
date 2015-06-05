@@ -41,7 +41,7 @@ from random import randint
 import numpy as np
 
 from OurModules import functions_nav_control as nav
-from OurModules import functions_ros_interfaces as ri
+from OurModules import runctions_localisation as loc
 from OurModules import functions_personality as personality
 
 # ROS libraries
@@ -135,7 +135,7 @@ def main(argv):
 		d_y = grid[waypoint_index][1]
 		d_th = grid[waypoint_index][2]
 		
-		if(ri.current_x == d_x and ri.current_y == d_y and ri.current_th == d_th):
+		if(loc.current_x == d_x and loc.current_y == d_y and loc.current_th == d_th):
 			# if the navigation system has reached the coordinate
 			print("Waypoint %d has been reached.") % waypoint_index
 			measure_temperature()

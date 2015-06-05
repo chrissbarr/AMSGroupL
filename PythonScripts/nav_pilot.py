@@ -21,8 +21,9 @@ import math
 import numpy as np
 
 from OurModules import functions_common as cf
-from OurModules import functions_ros_interfaces as ri
+from OurModules import functions_localisation as loc
 from OurModules import functions_motor_control as motor
+from OurModules import functions_nav_control as nav
 
 # ROS libraries
 import rospy
@@ -57,7 +58,7 @@ time.sleep(0.2) # make sure publisher setup
 # checks if the target coordinates are reached. Returns true if current x/y are near target x/y within set threshold
 def coordinates_reached(dist_threshold):
 	reached = False
-	if(cf.distance_between_points(ri.current_x,ri.current_y,ri.target_x,ri.target_y) < dist_threshold):
+	if(cf.distance_between_points(loc.current_x,loc.current_y,nav.target_x,nav.target_y) < dist_threshold):
 		reached = True
 	return reached
 	
@@ -78,7 +79,8 @@ def turn_to_face(heading_error):
 def main(argv):
 	global driving_P, driving_I, driving_error_sum
 	
-	ri.init()
+	loc.init()
+	nav.init()
 
 	moving = False	# tracks if we are currently moving towards the target point
 	
@@ -90,11 +92,11 @@ def main(argv):
 		loop_start = time.time() # get loop time at start for loop rate calculations
 		
 		# calculate angular difference
-		target_heading = cf.angle_between_points(ri.current_x,ri.current_y,ri.target_x,ri.target_y)
-		heading_error = cf.angular_difference(target_heading, ri.current_th)
+		target_heading = cf.angle_between_points(loc.current_x,loc.current_y,nav.target_x,nav.target_y)
+		heading_error = cf.angular_difference(target_heading, loc.current_th)
 		
-		if(ri.target_x != -999 and ri.target_y != -999):
-			print("Current Position: %.3f %.3f %.3f | Target Position: %.3f %.3f %.3f | Heading Error: %.3f") % (ri.current_x,ri.current_y,ri.current_th,ri.target_x,ri.target_y,ri.target_th,heading_error)
+		if(nav.target_x != -999 and nav.target_y != -999):
+			print("Current Position: %.3f %.3f %.3f | Target Position: %.3f %.3f %.3f | Heading Error: %.3f") % (loc.current_x,loc.current_y,loc.current_th,nav.target_x,nav.target_y,nav.target_th,heading_error)
 					
 			if(coordinates_reached(distance_threshold) == False):
 				if(moving == False):
@@ -125,7 +127,7 @@ def main(argv):
 					else:
 						#adjust motors to aim towards target point
 						motor_left_speed = base_speed - (heading_error * driving_P + driving_error_sum * driving_I)
-						motor_left_right = base_speed + (heading_error * driving_P + driving_error_sum * driving_I)
+						motor_right_speed = base_speed + (heading_error * driving_P + driving_error_sum * driving_I)
 
 						if(motor_left_speed > max_speed):
 							motor_left_speed = max_speed
@@ -133,7 +135,7 @@ def main(argv):
 							motor_right_speed = max_speed
 						
 						driving_error_sum += heading_error
-						motor.publish_command(0,motor_left_speed,motor_left_right)
+						motor.publish_command(0,motor_left_speed,motor_right_speed)
 			else:
 				print("Coordinates reached!")
 				#if we've just reached the point, stop!
@@ -145,9 +147,9 @@ def main(argv):
 					print("Motors stopped!")
 					
 				# now, turn to face the desired heading (if there is one)	
-				heading_offset = cf.angular_difference(ri.target_th,ri.current_th)
+				heading_offset = cf.angular_difference(nav.target_th,loc.current_th)
 				
-				if(ri.target_th != -999 and math.fabs(heading_offset) > rot_threshold):	#-999 means orientation doesn't matter, otherwise turn
+				if(nav.target_th != -999 and math.fabs(heading_offset) > rot_threshold and True == False):	#-999 means orientation doesn't matter, otherwise turn
 					print("Matching desired orientation...")
 					turn_to_face(heading_offset)
 				else:

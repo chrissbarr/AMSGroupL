@@ -42,7 +42,7 @@ def subscriber():
     return (VS)
 
 def publish_pose(x, y, th):
-    #create pose message
+        #create pose message
         msg = PoseStamped()
 
         msg.header.stamp = rospy.Time.now()

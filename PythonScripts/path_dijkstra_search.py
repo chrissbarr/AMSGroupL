@@ -16,7 +16,7 @@ from nav_msgs.msg import OccupancyGrid
 from geometry_msgs.msg import Point, Quaternion, PoseStamped, Pose
 import tf
 
-from OurModules import functions_ros_interfaces as ri
+from OurModules import functions_localisation as loc
 from OurModules import functions_common as cf
 from OurModules	import functions_nav_control as nav
 
@@ -218,11 +218,12 @@ def rosmap_to_map(rosmap):
 
 		(d_x, d_y) = cell_to_coord(rosmap, optimised_path[waypoint_index][0], optimised_path[waypoint_index][1])
 
-		if(ri.target_x == d_x and ri.target_y == d_y):
+		if(nav.target_x == d_x and nav.target_y == d_y):
 			#print("Current waypoint is target point!")
 			# if the navigation system has reached the coordinate
-			if(coordinates_reached(d_x,d_y,ri.current_x,ri.current_y)):
+			if(coordinates_reached(d_x,d_y,loc.current_x,loc.current_y)):
 				print("Waypoint %d has been reached.") % waypoint_index
+				time.sleep(5)
 				if(waypoint_index <= num_waypoints):
 					waypoint_index += 1
 				else:
@@ -238,7 +239,8 @@ def rosmap_to_map(rosmap):
 	
 def run():
 	rospy.init_node('mapConverter',anonymous=True)
-	ri.init()
+	loc.init()
+	nav.init()
 
 	# subscribe to ros occupancy-grid topic
 	occupancy_grid_topic = rospy.Subscriber("mapBroadcaster", OccupancyGrid, rosmap_to_map)

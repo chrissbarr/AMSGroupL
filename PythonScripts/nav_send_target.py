@@ -14,6 +14,8 @@ import std_msgs.msg
 from geometry_msgs.msg import Point, Quaternion, Pose
 import tf
 
+from OurModules import functions_nav_control as nav
+
 rospy.init_node("send_desired_pose", anonymous=False) # name the script on the ROS network
 
 
@@ -30,20 +32,7 @@ def main(argv):
 
     print("x: %.3f  y: %.3f  Th: %.1f") % (x, y, th) # print 2D pose data to terminal
 	
-    time.sleep(0.5)
-    #publish pose data to ros topic
-    msg = Pose()
-
-    q = tf.transformations.quaternion_from_euler(0, 0, th)
-
-    msg.position = Point(x,y,0)
-
-    msg.orientation.x = q[0]
-    msg.orientation.y = q[1]
-    msg.orientation.z = q[2]
-    msg.orientation.w = q[3]
-
-    pose_pub.publish(msg)
+    nav.send_target_pose(x,y,th)
     
     key_pressed = False
     while key_pressed == False:

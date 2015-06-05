@@ -33,6 +33,7 @@ import sys
 import os
 
 from OurModules import functions_motor_control as motor
+from OurModules import functions_personality as pf
 
 # ROS libraries
 import rospy
@@ -47,11 +48,13 @@ state = 0
 default_turn_direc = 3
 default_turn_speed = 25
 
+default_drive_speed = 40
+
 m_d = 0
 m_l = 0
 m_r = 0
 
-avoid_obstacles = False #if false, script acts as direct pass-through for motor commands
+avoid_obstacles = True #if false, script acts as direct pass-through for motor commands
 
 ir_sensor1 = 0
 ir_sensor2 = 0
@@ -60,6 +63,8 @@ ir_sensor4 = 0
 
 us_left = 0
 us_right = 0
+
+us_threshold = 1500
 
 # sensors map range to analog value roughly according to power equation (i.e. dist = c * analog^b)
 # below arrays hold 'c' and 'b' for each sensor
@@ -117,7 +122,7 @@ def obstacle_in_direction(dir):
     Direction 0 = in front, 1 = behind, 2 = right and 3 = left
     """
     if(dir == 0):   # is there something in front of the robot?
-        if(ir_sensor4 < 90 or us_left < 1200 or us_right < 1200):
+        if(ir_sensor4 < 90 or us_left < us_threshold or us_right < us_threshold):
             return True
         else:
             return False
@@ -141,6 +146,8 @@ def main():
     global m_d, m_r, m_l, default_turn_direc, default_turn_speed
     (ros_update_1, ros_update_2, ros_update_3) = subscriber() # subscribe to ROS topics
     time.sleep(1) # give sufficient time to start getting data
+
+    pf.sound_init()
     
     key_pressed = False
 	
@@ -154,15 +161,23 @@ def main():
                     motor.publish_command_direct(m_d,m_l,m_r)   #pass motor commands through transparently
                 else:
                     print("We can't go that way right now!")
+                    pf.play_sound_group(pf.sound_group_object_avoid,100)
                     #we can't drive that way right now, so let's do something else instead.
                     #first we rotate until the way ahead is clear
+
+                    if(us_right < us_threshold):
+                        turn_direc = 3
+                    else:
+                        turn_direc = 2
+
                     while(obstacle_in_direction(m_d) == True):
-                        motor.publish_command_direct(default_turn_direc,default_turn_speed,default_turn_speed)
-                        time.sleep(0.3)
+
+                        motor.publish_command_direct(turn_direc,default_turn_speed,default_turn_speed)
+                        time.sleep(0.5)
 
                     #then we drive forwards (or backwards) until it looks like we're past the obstacle, or if we're going to hit something!
                     while(obstacle_in_direction(m_d) == False and (obstacle_in_direction(2) == True or obstacle_in_direction(3) == True)):
-                        motor.publish_command_direct(m_d,m_l,m_r)
+                        motor.publish_command_direct(m_d,default_drive_speed,default_drive_speed)
                         time.sleep(0.2)
             else:
             	motor.publish_command_direct(m_d,m_l,m_r)   #pass motor commands through transparently

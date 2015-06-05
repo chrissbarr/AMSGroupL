@@ -33,7 +33,8 @@ sound_group_found = ['turret_active_6.ogg','turret_active_7.ogg','turret_active_
 sound_group_pickup = ['turret_pickup_3.ogg','turret_pickup_8.ogg','turret_pickup_7.ogg','turret_pickup_10.ogg','turretlaunched03.ogg','turretlightbridgeblock03.ogg']
 sound_group_push = ['turretsquashed04.ogg','turretsquashed06.ogg','turretshotbylaser07.ogg']
 sound_group_ping = ['ping.ogg']
-sound_group_lonely = ['turret_search_1.ogg','turret_autosearch_5.ogg']
+sound_group_lonely = ['turret_search_1.ogg','turret_autosearch_5.ogg','turret_autosearch_6.ogg']
+sound_group_object_avoid = ['turret_collide_1.ogg','turret_collide_2.ogg']
 
 last_played_sound = ['none','none','none']
 

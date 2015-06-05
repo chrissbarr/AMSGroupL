@@ -99,7 +99,7 @@ def imu_status_update(data):
 	#print("IMU")
 	
 def motor_drive_update(data):
-	global last_action_time, motor_direction, motor_speed_left, motor_speed_right
+	global last_action_time, motor_direction, motor_speed_left, motor_speed_right, motors_last_active_time
 
 	#print("motor drive update")
 
@@ -164,7 +164,7 @@ def react_to_pickup():
 				last_action_time = time.time()
 
 def react_to_pushed():
-	global last_pickup_comment_time, pickup_threshold, pushed_comment_time_threshold, last_action_time
+	global last_pickup_comment_time, pickup_threshold, pushed_comment_time_threshold, last_action_time, motors_last_active_time
 
 	# if the wheels are moving but the motors are off, someone may be pushing the mechbot along
 	if(check_motors_stopped() == True and check_encoders_stopped() == False):
@@ -173,8 +173,10 @@ def react_to_pushed():
 		time.sleep(0.2)
 
 		# check again - now we can be more certain if this is deliberate
-		if(check_motors_stopped() == True and check_encoders_stopped() == False and time.time() - motors_last_active_time < 2):
-			print("Motor speeds: %d %d, Encoder Values: %d %d") % ( motor_speed_left, motor_speed_right, encoder_left, encoder_right)
+		motor_time = time.time() - motors_last_active_time
+
+		if(check_motors_stopped() == True and check_encoders_stopped() == False and motor_time > 2):
+			print("Motor speeds: %d %d, Encoder Values: %d %d, Last motor time: %d") % ( motor_speed_left, motor_speed_right, encoder_left, encoder_right, motor_time)
 			print("Quit pushing me around!")
 			if(time.time() - last_pickup_comment_time > pushed_comment_time_threshold):
 				# enough time has passed to make another remark...

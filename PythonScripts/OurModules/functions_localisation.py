@@ -25,8 +25,6 @@ from geometry_msgs.msg import Point, Quaternion, PoseStamped, Pose
 from nav_msgs.msg import Odometry
 import tf
 
-initialise_odom_to_vicon = True #if true odometry will wait for Vicon before updating,
-
 current_x = current_y = current_th = -999
 odom_x = odom_y = odom_th = -999
 vicon_x = vicon_y = vicon_th = -999
@@ -35,15 +33,7 @@ odom_offset_x = odom_offset_y = odom_offset_th = 0
 def odom_update(data):
 	global odom_x, odom_y, odom_th
 
-	if(initialise_odom_to_vicon):
-		if(vicon_x != -999 and vicon_y != -999):	# Vicon data is published
-			if(odom_x == -999 and odom_y == -999):
-				odom_offset_x = vicon_x
-				odom_offset_y = vicon_y
-				odom_offset_th = vicon_th
-			(odom_x, odom_y, odom_th) = odom_parse(data)
-	else:
-		(odom_x, odom_y, odom_th) = odom_parse(data)
+	(odom_x, odom_y, odom_th) = odom_parse(data)
 
 def odom_parse(data):
 	global odom_offset_x, odom_offset_y, odom_offset_th

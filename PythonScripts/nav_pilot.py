@@ -32,7 +32,7 @@ from geometry_msgs.msg import Point, Quaternion, PoseStamped, Pose
 import tf
 
 distance_threshold = 0.1 # units are in metres, reached target if x & y within 0.1 = 10cm of target position
-rot_threshold = 0.2	# angle in radians, consider heading correct if within this number of radians to target point
+rot_threshold = 0.1	# angle in radians, consider heading correct if within this number of radians to target point
 travel_heading_error_window = 0.5 # If angle to target > this during travel, robot will stop and reorient
 base_speed = 80 # Default speed robot travels at. Left and right motors are biased from this value to adjust steering.
 max_speed = 100
@@ -99,6 +99,7 @@ def main(argv):
 			print("Current Position: %.3f %.3f %.3f | Target Position: %.3f %.3f %.3f | Heading Error: %.3f") % (loc.current_x,loc.current_y,loc.current_th,nav.target_x,nav.target_y,nav.target_th,heading_error)
 					
 			if(coordinates_reached(distance_threshold) == False):
+				nav.send_nav_message(nav.NAV_STATUS_COORDS_NOT_REACHED)
 				if(moving == False):
 					if(math.fabs(heading_error) < rot_threshold):
 						print("Heading achieved! Beginning move towards target!")
@@ -119,22 +120,22 @@ def main(argv):
 						turn_to_face(heading_error)
 				else:
 					#if we are moving but coordinates aren't reached...
-					if(heading_error > travel_heading_error_window):
+					if(math.fabs(heading_error) > travel_heading_error_window):
 						# if we're off course by too much, stop and re-orientate towards target
 						motor.publish_command(0,0,0)
 						moving = False
 						# loop should take over and make things work now we're stopped away from the target
 					else:
 						#adjust motors to aim towards target point
-						motor_left_speed = base_speed - (heading_error * driving_P + driving_error_sum * driving_I)
-						motor_right_speed = base_speed + (heading_error * driving_P + driving_error_sum * driving_I)
+						motor_left_speed = base_speed - (heading_error * driving_P)# + driving_error_sum * driving_I)
+						motor_right_speed = base_speed + (heading_error * driving_P)# + driving_error_sum * driving_I)
 
 						if(motor_left_speed > max_speed):
 							motor_left_speed = max_speed
 						if(motor_right_speed > max_speed):
 							motor_right_speed = max_speed
 						
-						driving_error_sum += heading_error
+						#driving_error_sum += heading_error
 						motor.publish_command(0,motor_left_speed,motor_right_speed)
 			else:
 				print("Coordinates reached!")
@@ -157,7 +158,7 @@ def main(argv):
 					#stop the motors
 					motor.publish_command(0,0,0)
 					#and let all other scripts know
-					#status_pub.publish(nav_coords_reached)
+					nav.send_nav_message(nav.NAV_STATUS_COORDS_REACHED)
 					
 		loop_sleep = delay - (time.time() - loop_start) # if loop delay too low then will print data faster than updates are recieved
 		

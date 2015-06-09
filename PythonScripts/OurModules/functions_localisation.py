@@ -36,10 +36,9 @@ def odom_update(data):
 	(odom_x, odom_y, odom_th) = odom_parse(data)
 
 def odom_parse(data):
-	global odom_offset_x, odom_offset_y, odom_offset_th
 
-	odom_x = data.pose.pose.position.x - odom_offset_x
-	odom_y = data.pose.pose.position.y - odom_offset_y
+	odom_x = data.pose.pose.position.x
+	odom_y = data.pose.pose.position.y
 
 	q = (
 	    data.pose.pose.orientation.x,
@@ -49,7 +48,7 @@ def odom_parse(data):
 
 	# convert orientation from quaternion to euler angles, read yaw
 	euler = tf.transformations.euler_from_quaternion(q)
-	odom_th = euler[2] - odom_offset_th
+	odom_th = euler[2]
 
 	return (odom_x, odom_y, odom_th)
 
@@ -77,15 +76,37 @@ def vicon_pose_update(data):
 	current_y = vicon_y
 	current_th = vicon_th
 
+def fused_pose_update(data):
+	global current_x, current_y, current_th
+
+	# read in position
+	current_x = data.pose.position.x
+	current_y = data.pose.position.y
+	
+	# read in orientation
+	q = (
+	    data.pose.orientation.x,
+	    data.pose.orientation.y,
+	    data.pose.orientation.z,
+	    data.pose.orientation.w)
+	
+	# convert orientation from quaternion to euler angles, read yaw
+	euler = tf.transformations.euler_from_quaternion(q)
+	current_th = euler[2]
+
 def vicon_pose_initialise():
 	PS = rospy.Subscriber("viconPose", PoseStamped, vicon_pose_update)
 
 def odom_initialise():
 	OD = rospy.Subscriber("odom", Odometry, odom_update)
 
+def fused_pose_initialise():
+	Pf = rospy.Subscriber("fusedPose", PoseStamped, fused_pose_update)
+
 def init():
 	vicon_pose_initialise()
 	odom_initialise()
+	fused_pose_initialise()
 
 if __name__ == '__main__': # main loop
 	try: # if no problems

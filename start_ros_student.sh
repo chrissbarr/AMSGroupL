@@ -64,8 +64,6 @@ screen -S ROS_bridge -p 0 -X stuff "roslaunch rosbridge_server rosbridge_websock
 
 screen -S ROS_web_offloader -p 0 -X stuff "python /home/odroid/system_files/python/rosweb_offloader.py $ENTER"
 
-
-
 # The ROS_MJPEG_server has an issue with starting correctly. Therefore, we will start it once, kill it, and start it again.
 screen -S ROS_MJPEG_server -p 0 -X stuff "sleep 20 $ENTER"
 screen -S ROS_MJPEG_server -p 0 -X stuff "rosrun web_video_server web_video_server _port:=8181 $ENTER"
@@ -86,3 +84,9 @@ screen -S nav_pilot_screen -p 0 -X stuff "python /home/odroid/python_scripts/nav
 
 screen -dmS vicon_to_pose
 screen -S vicon_to_pose -p 0 -X stuff "python /home/odroid/python_scripts/loc_vicon_to_pose.py $ENTER"
+
+screen -dmS encoder_to_odom
+screen -S encoder_to_odom -p 0 -X stuff "python /home/odroid/python_scripts/loc_encoder_to_odom.py $ENTER"
+
+screen -dmS loc_fusion
+screen -S loc_fusion -p 0 -X stuff "python /home/odroid/python_scripts/loc_fusion.py $ENTER"

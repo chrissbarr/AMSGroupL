@@ -31,6 +31,7 @@ from OurModules import functions_common as func
 
 # setup publishing pose messages
 pose_pub = rospy.Publisher('fusedPose', PoseStamped, queue_size=10)
+rospy.init_node("localisationFuser", anonymous=False) # name the script on the ROS network
 
 odom_offset_x = odom_offset_y = odom_offset_th = 0	# variables to track the offset between VICON localisation and raw odometry localisation
 
@@ -38,7 +39,7 @@ vicon_x_prev = vicon_y_prev = -999
 vicon_th_prev = 0
 
 vicon_xy_jump_threshold = 0.2 # maximum distance allowed between successive Vicon Pose messages for data to be considered valid (m)
-vicon_th_jump_threshold = math.pi / 2 # maximum rotation allower between successive Vicon Pose messages for data to be considered valid (rad)
+vicon_th_jump_threshold = 10 * math.pi / 2 # maximum rotation allower between successive Vicon Pose messages for data to be considered valid (rad)
 
 def publish_current_pose(x, y, th):
 	#create pose message
@@ -65,12 +66,17 @@ def vicon_is_reliable(vicon_x, vicon_y, vicon_th):
 	# first, check that the VICON is initialised...
 	if(vicon_x == -999 and vicon_y == -999):
 		vicon_is_good = False
-
 	# make sure this isn't the first loop with Vicon data...
-	if(vicon_x_prev != -999 and vicon_y_prev != -999):
+	elif(vicon_x_prev != -999 and vicon_y_prev != -999):
 		# next, check that the value hasn't jumped unreasonably far from the last vicon message
-		if((math.fabs(vicon_x - vicon_x_prev) > vicon_xy_jump_threshold) or (math.fabs(vicon_y - vicon_y_prev) > vicon_xy_jump_threshold) or (func.angular_difference(vicon_th, vicon_th_prev) > vicon_th_jump_threshold):
+		if((math.fabs(vicon_x - vicon_x_prev) > vicon_xy_jump_threshold) or (math.fabs(vicon_y - vicon_y_prev) > vicon_xy_jump_threshold)): #or (math.fabs(func.angular_difference(vicon_th, vicon_th_prev)) > vicon_th_jump_threshold)):
 			vicon_is_good = False
+			print("Large Vicon jump! From (%.3f %.3f %.3f to %.3f %.3f %.3f)") % (vicon_x_prev, vicon_y_prev, vicon_th_prev, vicon_x, vicon_y, vicon_th)
+
+		# also check if the values are identical (Vicon is likely frozen then)
+		if(vicon_x == vicon_x_prev and vicon_y == vicon_y_prev):
+			vicon_is_good = False
+			print("Vicon data stalled!")
 
 	vicon_x_prev = vicon_x
 	vicon_y_prev = vicon_y
@@ -107,10 +113,9 @@ def localisation_fusion():
 		fused_x = odom_x + odom_offset_x
 		fused_y = odom_y + odom_offset_y
 		fused_th = odom_th + odom_offset_th
+		print("Substituting odometry data: %.3f %.3f %.3f") % (fused_x, fused_y, fused_th)
 
 	return(fused_x, fused_y, fused_th)
-
-
 
 def main():
 

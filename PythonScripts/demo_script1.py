@@ -43,6 +43,7 @@ import numpy as np
 from OurModules import functions_nav_control as nav
 from OurModules import runctions_localisation as loc
 from OurModules import functions_personality as personality
+from OurModules import functions_common as com
 
 # ROS libraries
 import rospy
@@ -51,6 +52,8 @@ from geometry_msgs.msg import Point, Quaternion, PoseStamped, Pose
 import tf
 
 delay = 0.1 # update rate for main loop (s)
+
+waypoint_distance_threshold
 
 rospy.init_node("demo_script_controller", anonymous=False) # name the script on the ROS network
 
@@ -111,15 +114,17 @@ def measure_temperature():
 	personality.play_sound_group(personality.sound_group_ping,100)
 	#to do
 	
-	temperature = randint(10,40)
-	if(25 < temperature and temperature < 35):
+	temperature = randint(0,80)
+	time.sleep(.5)
+	if(28 < temperature and temperature < 38):
 		print("Person detected! (maybe...)")
 		personality.play_sound_group(personality.sound_group_found,100)
 		time.sleep(5)
 		
 def main(argv):
 	key_pressed = False
-	
+
+	nav.init()
 	personality.sound_init()
 	
 	# First, generate the search grid
@@ -135,7 +140,7 @@ def main(argv):
 		d_y = grid[waypoint_index][1]
 		d_th = grid[waypoint_index][2]
 		
-		if(loc.current_x == d_x and loc.current_y == d_y and loc.current_th == d_th):
+		if(nav.nav_status == nav.NAV_STATUS_COORDS_REACHED):
 			# if the navigation system has reached the coordinate
 			print("Waypoint %d has been reached.") % waypoint_index
 			measure_temperature()

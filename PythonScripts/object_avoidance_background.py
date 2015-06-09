@@ -31,9 +31,11 @@ import socket
 from os.path import expanduser
 import sys
 import os
+import math
 
 from OurModules import functions_motor_control as motor
 from OurModules import functions_personality as pf
+from OurModules import functions_localisation as loc
 
 # ROS libraries
 import rospy
@@ -64,7 +66,8 @@ ir_sensor4 = 0
 us_left = 0
 us_right = 0
 
-us_threshold = 1500
+us_threshold = 1750
+ir_side_threshold = 70
 
 # sensors map range to analog value roughly according to power equation (i.e. dist = c * analog^b)
 # below arrays hold 'c' and 'b' for each sensor
@@ -109,7 +112,12 @@ def motor_update(data):
 
     m_d = data.data[0] #direction (0 = forward, 1 = reverse, 2 = clockwise, 3 = counter-clockwise)
     m_l = data.data[1] #left speed
-    m_r = m_l#data.data[2]  #right speed
+    m_r = data.data[2]#data.data[2]  #right speed
+
+    if(m_r == 0):   # when controlled from web page only left motor is set
+        m_r = m_l
+
+    
 
     if not (avoid_obstacles):
             motor.publish_command_direct(m_d,m_l,m_r)
@@ -142,12 +150,29 @@ def obstacle_in_direction(dir):
         else:
             return False 
 
+def obstacle_too_close_side():
+    too_close = False
+
+    if(ir_sensor2 < ir_side_threshold):
+        too_close = True
+    elif(ir_sensor3 < ir_side_threshold):
+        too_close = True
+
+    if(too_close == True):
+        if(ir_sensor2 < ir_sensor3):
+            return 1
+        else:
+            return -1
+    else:
+        return 0
+
 def main():
     global m_d, m_r, m_l, default_turn_direc, default_turn_speed
     (ros_update_1, ros_update_2, ros_update_3) = subscriber() # subscribe to ROS topics
     time.sleep(1) # give sufficient time to start getting data
 
     pf.sound_init()
+    loc.init()
     
     key_pressed = False
 	
@@ -158,10 +183,15 @@ def main():
                 #print("Obstacle Ahead: %s | Behind: %s | Right: %s | Left: %s") % (obstacle_in_direction(0), obstacle_in_direction(1), obstacle_in_direction(2), obstacle_in_direction(3))
                 if(obstacle_in_direction(m_d) == False):  
                     #print("Nothing in the way - proceed as normal!")
-                    motor.publish_command_direct(m_d,m_l,m_r)   #pass motor commands through transparently
+                    if(obstacle_too_close_side() == 0):
+                        motor.publish_command_direct(m_d,m_l,m_r)   #pass motor commands through transparently
+                    else:
+                        closest = min(ir_sensor2, ir_sensor3)
+                        scale = (ir_side_threshold - closest) * 2
+                        motor.publish_command_direct(m_d, m_l - scale * obstacle_too_close_side(), m_r + scale * obstacle_too_close_side())
                 else:
                     print("We can't go that way right now!")
-                    pf.play_sound_group(pf.sound_group_object_avoid,100)
+                    pf.play_sound_group(pf.sound_group_object_avoid,25)
                     #we can't drive that way right now, so let's do something else instead.
                     #first we rotate until the way ahead is clear
 
@@ -170,15 +200,21 @@ def main():
                     else:
                         turn_direc = 2
 
-                    while(obstacle_in_direction(m_d) == True):
+                    init_heading = loc.current_th
+
+                    while(math.fabs(init_heading - loc.current_th) < math.pi/6 and obstacle_in_direction(m_d) == True):
 
                         motor.publish_command_direct(turn_direc,default_turn_speed,default_turn_speed)
-                        time.sleep(0.5)
+                        print("Turning away...")
+                        time.sleep(0.25)
+                        
 
                     #then we drive forwards (or backwards) until it looks like we're past the obstacle, or if we're going to hit something!
                     while(obstacle_in_direction(m_d) == False and (obstacle_in_direction(2) == True or obstacle_in_direction(3) == True)):
                         motor.publish_command_direct(m_d,default_drive_speed,default_drive_speed)
-                        time.sleep(0.2)
+                        print("Circumnavigating...")
+                        time.sleep(0.02)
+
             else:
             	motor.publish_command_direct(m_d,m_l,m_r)   #pass motor commands through transparently
 

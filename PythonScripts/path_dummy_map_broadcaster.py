@@ -48,7 +48,7 @@ def create_map( ):
     test_map.info.resolution = 250 
     test_map.info.width = 5
     test_map.info.height = 5
-    test_map.info.origin.position.x = 4000#loc.current_x #-test_map.info.width/2
+    test_map.info.origin.position.x = 6000#loc.current_x #-test_map.info.width/2
     test_map.info.origin.position.y = 1000#loc.current_y #-test_map.info.height/2
     test_map.info.origin.position.z = 0 
     test_map.info.origin.orientation.x = 0.0 

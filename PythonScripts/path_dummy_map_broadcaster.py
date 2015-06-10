@@ -18,12 +18,14 @@ from OurModules import functions_localisation as loc
 
 def map_broadcaster():
 	pub = rospy.Publisher('mapBroadcaster',OccupancyGrid,queue_size=10)
-	rospy.init_node('gridBroadcaster',anonymous=True)
+	rospy.init_node('gridBroadcaster',anonymous=False)
 
 #	loc.init()
+
+	
 	
 	new_map = create_map()
-
+	time.sleep(1)
 	pub.publish(new_map)
 
 	rate = rospy.Rate(2)
@@ -32,9 +34,11 @@ def map_broadcaster():
 	key_pressed = False
 	
 	while key_pressed == False:
-		
+		pub.publish(new_map)
 		key_pressed = select.select([sys.stdin], [], [], 0) == ([sys.stdin], [], []) # is key pressed?
 		rate.sleep()
+
+
 		
 def add_obstacle(map, x, y):
 	map.data[(map.info.width * y) + x] = 100
@@ -45,11 +49,11 @@ def create_map( ):
     
     test_map.header.frame_id = 'world'
     
-    test_map.info.resolution = 250 
-    test_map.info.width = 5
-    test_map.info.height = 5
-    test_map.info.origin.position.x = 6000#loc.current_x #-test_map.info.width/2
-    test_map.info.origin.position.y = 1000#loc.current_y #-test_map.info.height/2
+    test_map.info.resolution = .250 
+    test_map.info.width = 16
+    test_map.info.height = 8
+    test_map.info.origin.position.x = 6#loc.current_x #-test_map.info.width/2	5
+    test_map.info.origin.position.y = .25#loc.current_y #-test_map.info.height/2	.5
     test_map.info.origin.position.z = 0 
     test_map.info.origin.orientation.x = 0.0 
     test_map.info.origin.orientation.y = 0.0 
@@ -67,8 +71,16 @@ def create_map( ):
     add_obstacle(test_map,2,2)
     add_obstacle(test_map,3,2)
     add_obstacle(test_map,3,3)
-    #for i in range (0, 9):
-    #	add_obstacle(test_map,5,i)
+
+    add_obstacle(test_map,1,5)
+    add_obstacle(test_map,2,5)
+    add_obstacle(test_map,3,5)
+    add_obstacle(test_map,4,5)
+
+    add_obstacle(test_map,6,5)
+
+    for i in range (0, test_map.info.height-1):
+    	add_obstacle(test_map,5,i)
     print test_map
     return test_map
 

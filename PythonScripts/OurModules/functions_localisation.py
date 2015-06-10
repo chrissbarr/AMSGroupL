@@ -30,6 +30,8 @@ odom_x = odom_y = odom_th = -999
 vicon_x = vicon_y = vicon_th = -999
 odom_offset_x = odom_offset_y = odom_offset_th = 0
 
+vicon_last_update_time = 0
+
 def odom_update(data):
 	global odom_x, odom_y, odom_th
 
@@ -56,6 +58,7 @@ def odom_parse(data):
 def vicon_pose_update(data):
 	global vicon_x, vicon_y, vicon_th
 	global current_x, current_y, current_th
+	global vicon_last_update_time
 
 	# read in position
 	vicon_x = data.pose.position.x
@@ -75,6 +78,11 @@ def vicon_pose_update(data):
 	current_x = vicon_x
 	current_y = vicon_y
 	current_th = vicon_th
+
+	vicon_last_update_time = time.time()
+
+def time_since_last_vicon_message():
+	return time.time() - vicon_last_update_time
 
 def fused_pose_update(data):
 	global current_x, current_y, current_th

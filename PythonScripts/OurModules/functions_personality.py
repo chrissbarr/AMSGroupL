@@ -29,16 +29,18 @@ sound_group_startup = ['turret_deploy_2.ogg','turret_deploy_4.ogg']
 sound_group_shutdown = ['turret_disabled_4.ogg','turret_retire_1.ogg','turret_retire_2.ogg','turret_retire_4.ogg','turret_retire_5.ogg','turret_retire_6.ogg','turret_retire_7.ogg']
 sound_group_error = ['turret_disabled_2.ogg','turret_tipped_2.ogg','turret_tipped_3.ogg','turret_tipped_4.ogg']
 sound_group_search = ['turret_search_4.ogg','turret_autosearch_2.ogg','turret_autosearch_3.ogg']
-sound_group_found = ['turret_active_6.ogg','turret_active_7.ogg','turret_active_8.ogg','sp_sabotage_factory_good_prerange01.ogg']
+sound_group_found = ['turret_active_6.ogg','turret_active_7.ogg','turret_active_8.ogg','sp_sabotage_factory_good_prerange01.ogg','turret_search_3.ogg']
 sound_group_pickup = ['turret_pickup_3.ogg','turret_pickup_8.ogg','turret_pickup_7.ogg','turret_pickup_10.ogg','turretlaunched03.ogg','turretlightbridgeblock03.ogg']
 sound_group_push = ['turretsquashed04.ogg','turretsquashed06.ogg','turretshotbylaser07.ogg']
 sound_group_ping = ['ping.ogg']
 sound_group_lonely = ['turret_search_1.ogg','turret_autosearch_5.ogg','turret_autosearch_6.ogg']
 sound_group_object_avoid = ['turret_collide_1.ogg','turret_collide_2.ogg']
+sound_group_hello = ['sp_sabotage_factory_good_pass01.ogg','sp_sabotage_factory_template01.ogg']
 
 last_played_sound = ['none','none','none']
 
 def sound_init():
+	random.seed()
 	pygame.mixer.pre_init(44100, -16, 2, 4096) # set sound buffer. Prevents popping when playing sound files
 	pygame.init()
 	pygame.mixer.init()

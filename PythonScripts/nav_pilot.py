@@ -36,9 +36,10 @@ rot_threshold = 0.1	# angle in radians, consider heading correct if within this 
 travel_heading_error_window = 0.5 # If angle to target > this during travel, robot will stop and reorient
 base_speed = 80 # Default speed robot travels at. Left and right motors are biased from this value to adjust steering.
 max_speed = 100
+matchRotation = False
 
 #rotation settings
-rot_P = 20.0
+rot_P = 25.0
 rot_I = 0.0
 rot_D = 0.0
 rot_error_sum = 0
@@ -78,6 +79,10 @@ def turn_to_face(heading_error):
 
 def main(argv):
 	global driving_P, driving_I, driving_error_sum
+
+	if(sys.argv[1] == 'T'):
+		matchRotation = True
+		print("Rotation Match Enabled")
 	
 	loc.init()
 	nav.init()
@@ -150,8 +155,9 @@ def main(argv):
 				# now, turn to face the desired heading (if there is one)	
 				heading_offset = cf.angular_difference(nav.target_th,loc.current_th)
 				
-				if(nav.target_th != -999 and math.fabs(heading_offset) > rot_threshold and True == False):	#-999 means orientation doesn't matter, otherwise turn
+				if(nav.target_th != -999 and math.fabs(heading_offset) > rot_threshold and matchRotation == True):	#-999 means orientation doesn't matter, otherwise turn
 					print("Matching desired orientation...")
+					nav.send_nav_message(nav.NAV_STATUS_COORDS_NOT_REACHED)
 					turn_to_face(heading_offset)
 				else:
 					#target position and orientation is reached!

@@ -34,19 +34,6 @@ import tf
 from OurModules import functions_personality as pf
 from OurModules import functions_servo_control as servo
 
-# SOUNDS
-sound_folder = '{0}/Documents/Sounds/PortalTurret/'.format(expanduser('~')) # folder that contains the sound file
-sound_group_startup = ['turret_deploy_2.ogg','turret_deploy_4.ogg']
-sound_group_shutdown = ['turret_disabled_4.ogg','turret_retire_1.ogg','turret_retire_2.ogg','turret_retire_4.ogg','turret_retire_5.ogg','turret_retire_6.ogg','turret_retire_7.ogg']
-sound_group_error = ['turret_disabled_2.ogg','turret_tipped_2.ogg','turret_tipped_3.ogg','turret_tipped_4.ogg']
-sound_group_search = ['turret_search_4.ogg','turret_autosearch_2.ogg','turret_autosearch_3.ogg']
-sound_group_found = ['turret_active_6.ogg','turret_active_7.ogg','turret_active_8.ogg','sp_sabotage_factory_good_prerange01.ogg']
-sound_group_pickup = ['turret_pickup_3.ogg','turret_pickup_8.ogg','turret_pickup_7.ogg','turret_pickup_10.ogg','turretlaunched03.ogg','turretlightbridgeblock03.ogg']
-sound_group_push = ['turretsquashed04.ogg','turretsquashed06.ogg','turretshotbylaser07.ogg']
-sound_group_ping = ['ping.ogg']
-sound_group_lonely = ['turret_search_1.ogg','turret_autosearch_5.ogg']
-sound_group_hello = ['sp_sabotage_factory_good_pass01.ogg','sp_sabotage_factory_template01.ogg']
-
 # IMU
 acc_x = -999
 acc_y = -999
@@ -159,7 +146,7 @@ def react_to_pickup():
 			# robot is being handled / carried. Respond if appropriate:
 			if(time.time() - last_pickup_comment_time > pickup_comment_time_threshold):
 				# enough time has passed to make another remark...
-				pf.play_sound_group(sound_group_pickup,100)
+				pf.play_sound_group(pf.sound_group_pickup,100)
 				last_pickup_comment_time = time.time()
 				last_action_time = time.time()
 
@@ -180,7 +167,7 @@ def react_to_pushed():
 			print("Quit pushing me around!")
 			if(time.time() - last_pickup_comment_time > pushed_comment_time_threshold):
 				# enough time has passed to make another remark...
-				pf.play_sound_group(sound_group_push,100)
+				pf.play_sound_group(pf.sound_group_push,100)
 				last_pickup_comment_time = time.time()
 				last_action_time = time.time()
 			
@@ -188,7 +175,7 @@ def react_to_lonely():
 	global last_action_time, lonely_threshold_time
 	if(time.time() - last_action_time > lonely_threshold_time):
 		print("Getting lonely here...")
-		pf.play_sound_group(sound_group_lonely,30)
+		pf.play_sound_group(pf.sound_group_lonely,30)
 		last_action_time = time.time()
 
 def react_to_gripper_squeeze():
@@ -196,7 +183,7 @@ def react_to_gripper_squeeze():
 	if(gripper_force > 200):
 		if(time.time() - last_handshake_comment_time > handshake_comment_time_threshold):
 			print("Handshake?")
-			pf.play_sound_group(sound_group_hello,100)
+			pf.play_sound_group(pf.sound_group_hello,100)
 			last_action_time = time.time()
 			last_handshake_comment_time = time.time()
 
@@ -205,7 +192,7 @@ def personality_core_init():
 	pf.sound_init()
 	time.sleep(1)
 	print("Hello! Personality Core initialised!")
-	pf.play_sound_group(sound_group_startup,100)
+	pf.play_sound_group(pf.sound_group_startup,100)
 	pf.block_wait_sound_finish()
 	servo.publish_servo(1000,550)	#move servo arm out of way for navigation / object avoidance
 
@@ -216,7 +203,7 @@ def personality_core_update():
 	react_to_gripper_squeeze()
 	
 def personality_core_shutdown():
-	pf.play_sound_group(sound_group_shutdown,100)
+	pf.play_sound_group(pf.sound_group_shutdown,100)
 	print ("Personality Core Disengaged. Shutting down...")
 
 	pf.block_wait_sound_finish()
@@ -251,7 +238,7 @@ if __name__ == '__main__': # main loop
  	except Exception,e: # if a problem
  		print ("Error!")
 		print(e)
-		pf.play_sound_group(sound_group_error,100)
+		pf.play_sound_group(pf.sound_group_error,100)
 		pf.block_wait_sound_finish()
 		pass
  

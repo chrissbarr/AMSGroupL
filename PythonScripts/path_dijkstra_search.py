@@ -187,7 +187,7 @@ def rosmap_to_map(rosmap):
 		g = occupancy_grid
 		
 		g_start = (0,0)
-		g_goal = (0,6)
+		g_goal = (6,0)
 		
 		came_from, cost_so_far = dijkstra_search(g, g_start, g_goal)
 		draw_grid(g, width=2, point_to=came_from, start=g_start, goal=g_goal)

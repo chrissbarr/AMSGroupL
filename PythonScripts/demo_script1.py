@@ -124,7 +124,7 @@ def main(argv):
 	print("modules initialised")
 	
 	# First, generate the search grid
-	grid, num_waypoints = generate_search_grid(6.5,1,3,3,0.5,4)
+	grid, num_waypoints = generate_search_grid(3,0.8,4,3,0.75,4)
 	print("grid generated)")
 	waypoint_index = 0
 	grid_finished = False
@@ -146,7 +146,7 @@ def main(argv):
 			# if the navigation system has reached the coordinate
 			print("Waypoint %d has been reached.") % waypoint_index
 			measure_temperature()
-			if(waypoint_index < num_waypoints):
+			if(waypoint_index < num_waypoints-1):
 				waypoint_index += 1
 				pf.play_sound_group(pf.sound_group_search,5)
 			else:

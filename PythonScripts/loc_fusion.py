@@ -46,6 +46,8 @@ vicon_y_prev_list = [0,0,0,0,0]
 
 vicon_reliability_history = [False] * 20
 
+vicon_only = False
+
 
 vicon_noise_floor = 0.1
 
@@ -118,7 +120,7 @@ def vicon_is_reliable(vicon_x, vicon_y, vicon_th):
 
 def localisation_fusion():
 	global odom_offset_x, odom_offset_y, odom_offset_th
-	global vicon_reliability_history
+	global vicon_reliability_history, vicon_only
 	# let's make our variables easier to address
 	vicon_x = loc.vicon_x
 	vicon_y = loc.vicon_y
@@ -133,7 +135,7 @@ def localisation_fusion():
 	reliable = vicon_is_reliable(vicon_x,vicon_y,vicon_th)
 
 	#now let's do stuff with them
-	if(reliable == True):
+	if(reliable == True or vicon_only == True):
 		# VICON is working, so let's just use our VICON pose as our current pose
 		fused_x = vicon_x
 		fused_y = vicon_y
@@ -166,8 +168,16 @@ def localisation_fusion():
 	return(fused_x, fused_y, fused_th)
 
 def main():
+	global vicon_only
 
 	loc.init() # subscrive to VICON and Odometry messages
+
+	if(sys.argv[1] == 'T'):
+		vicon_only = True
+		print("Vicon Data Only")
+	else:
+		vicon_only = False
+		print("Odometry data will be used too")
 	
 	rate = rospy.Rate(10)
 	

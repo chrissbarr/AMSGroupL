@@ -78,11 +78,13 @@ def turn_to_face(heading_error):
 	motor.publish_command(rot,motor_speed,motor_speed)
 
 def main(argv):
-	global driving_P, driving_I, driving_error_sum
+	global driving_P, driving_I, driving_error_sum, matchRotation
 
 	if(sys.argv[1] == 'T'):
 		matchRotation = True
 		print("Rotation Match Enabled")
+	else:
+		matchRotation = False
 	
 	loc.init()
 	nav.init()

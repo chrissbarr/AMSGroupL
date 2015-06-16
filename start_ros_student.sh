@@ -91,4 +91,4 @@ screen -dmS encoder_to_odom
 screen -S encoder_to_odom -p 0 -X stuff "python /home/odroid/python_scripts/loc_encoder_to_odom.py $ENTER"
 
 screen -dmS loc_fusion
-screen -S loc_fusion -p 0 -X stuff "python /home/odroid/python_scripts/loc_fusion.py $ENTER"
+screen -S loc_fusion -p 0 -X stuff "python /home/odroid/python_scripts/loc_fusion.py T $ENTER"

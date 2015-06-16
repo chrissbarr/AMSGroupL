@@ -69,7 +69,7 @@ if __name__ == '__main__':
 
     try:
 
-        ROS_defaults(frame_width=432, frame_height=240, frame_rate=25, flip=2, volume=5)
+        ROS_defaults(frame_width=432, frame_height=240, frame_rate=25, flip=2, volume=3)
 	#ROS_defaults(frame_width=640, frame_height=480, frame_rate=25, flip=2, volume=40)
 
     except rospy.ROSInterruptException:

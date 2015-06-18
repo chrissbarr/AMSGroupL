@@ -23,14 +23,28 @@ sleep 1
 screen -S object_avoidance_screen -p 0 -X stuff "python /home/odroid/python_scripts/object_avoidance_background.py F $ENTER"
 
 # make sure nav pilot is running correctly
-screen -S nav_pilot_screen -p 0 -X stuff "$ENTER"
-sleep 1
-screen -S nav_pilot_screen -p 0 -X stuff "python /home/odroid/python_scripts/nav_pilot.py F $ENTER"
+#screen -S nav_pilot_screen -p 0 -X stuff "$ENTER"
+#sleep 1
+#screen -S nav_pilot_screen -p 0 -X stuff "python /home/odroid/python_scripts/nav_pilot.py F $ENTER"
+
+#sleep 1
+
+#echo killing odom...
+# start encoder odometry correctly
+#screen -S encoder_to_odom -p 0 -X stuff "$ENTER" # kill running script (if any)
+#sleep 2
+#screen -S encoder_to_odom -p 0 -X stuff "python /home/odroid/python_scripts/loc_encoder_to_odom.py $ENTER"
+#echo odom started
+#sleep 1
 
 # start localisation script correctly
 screen -S loc_fusion -p 0 -X stuff "$ENTER" # kill running script (if any)
 sleep 1
-screen -S loc_fusion -p 0 -X stuff "python /home/odroid/python_scripts/loc_fusion.py F $ENTER"
+screen -S loc_fusion -p 0 -X stuff "python /home/odroid/python_scripts/loc_fusion.py T $ENTER"
+
+
+
+sleep 2
 
 # start logging data
 screen -dmS logging_screen
@@ -40,7 +54,7 @@ screen -S logging_screen -p 0 -X stuff "python /home/odroid/python_scripts/nav_l
 screen -dmS waypoint_test_screen
 screen -S waypoint_test_screen -p 0 -X stuff "python /home/odroid/python_scripts/nav_test.py $ENTER"
 
-sleep 75
+sleep 50
 
 # shutdown scripts
 screen -S waypoint_test_screen -p 0 -X stuff "$ENTER" 	#end the script

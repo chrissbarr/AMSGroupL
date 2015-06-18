@@ -11,8 +11,11 @@ from os.path import expanduser
 import tf
 import socket
 import math
+import select
 
 from std_msgs.msg import *
+
+from OurModules import functions_localisation as loc
 
 # define settings
 WheelDiameter = 45.0	# wheel diameter in mm
@@ -45,6 +48,8 @@ rospy.init_node('odom_publisher',anonymous=True)
 odom_broadcaster = tf.TransformBroadcaster()
 
 last_time_odom = 0
+
+odom_offset_x = odom_offset_y = odom_offset_th = 0
 
 
 def wheel_callback(data):
@@ -102,6 +107,11 @@ def wheel_callback(data):
 	return
 
 def publish_odometry(x, y, th):
+	global odom_offset_x, odom_offset_y, odom_offset_th
+
+	x = x + odom_offset_x
+	y = y + odom_offset_y
+	th = th+ odom_offset_th
 
 	print('X: %.3f Y: %.3f Theta: %.3f') % (x, y, th)
 	
@@ -121,13 +131,26 @@ def publish_odometry(x, y, th):
 	odom_pub.publish(msg)
 
 def main():
+	global odom_offset_x, odom_offset_y, odom_offset_th
+
+	loc.init()
+
+	while(loc.vicon_x == -999):
+		time.sleep(0.5)
+
+	odom_offset_x = loc.vicon_x
+	odom_offset_y = loc.vicon_y
+	odom_offset_th = loc.vicon_th
 	
 	# subscribe to wheel encoder messages
 	encoder_ros_update = rospy.Subscriber("/mechbot_12/get/encoder_status", std_msgs.msg.Int32MultiArray, wheel_callback)
 	
-	rate = rospy.Rate(1)
+	rate = rospy.Rate(5)
 	
-	while not rospy.is_shutdown():
+	key_pressed = False
+
+	while key_pressed == False:
+		key_pressed = select.select([sys.stdin], [], [], 0) == ([sys.stdin], [], []) # is key pressed?
 		rate.sleep()
 	
 if __name__=='__main__':

@@ -31,7 +31,7 @@ if(save_data): # setup to save data to file
 	filename = '{0}/data_log/path_logger_{1}.txt'.format(expanduser("~"), datetime.datetime.now()) # modify if a different directory or filename required
 	open(filename, 'w').close() # blank the file. Opening a file in write or 'w' mode empties it
 	f = open(filename, 'a') # open file for appending
-	f.write("Time\tX\tY\tTh\tT_X\tT_Y\tT_Th\n") # write titles on data columns. Tab delimited with a new line at the end
+	f.write("Time\tX\tY\tTh\tT_X\tT_Y\tT_Th\tL_X\tL_Y\tL_Th\n") # write titles on data columns. Tab delimited with a new line at the end
 
 rospy.init_node("nav_logger", anonymous=False) # name the script on the ROS network
 
@@ -47,10 +47,10 @@ def main():
 		
 		current_time = time.time() - start_time # find time of update
 
-		print("%.3f\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f") % (current_time, loc.vicon_x, loc.vicon_y, loc.vicon_th, nav.target_x, nav.target_y, nav.target_th, loc.odom_offset_x, loc.odom_offset_y, loc.odom_offset_th)
+		print("%.3f\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f") % (current_time, loc.vicon_x, loc.vicon_y, loc.vicon_th, nav.target_x, nav.target_y, nav.target_th, loc.odom_x, loc.odom_y, loc.odom_th)
 		
 		if(save_data):
-			f.write('{0}\t{1}\t{2}\t{3}\t{4}\t{5}\t{6}\t{7}\t{8}\t{9}\n'.format(current_time, loc.vicon_x, loc.vicon_y, loc.vicon_th, nav.target_x, nav.target_y, nav.target_th, loc.odom_offset_x, loc.odom_offset_y, loc.odom_offset_th)) # write data to file
+			f.write('{0}\t{1}\t{2}\t{3}\t{4}\t{5}\t{6}\t{7}\t{8}\t{9}\n'.format(current_time, loc.vicon_x, loc.vicon_y, loc.vicon_th, nav.target_x, nav.target_y, nav.target_th, loc.odom_x, loc.odom_y, loc.odom_th)) # write data to file
 		
 		key_pressed = select.select([sys.stdin], [], [], 0) == ([sys.stdin], [], []) # is key pressed?
 		time.sleep(delay) # loop delay to ensure do not take up too much of system resources

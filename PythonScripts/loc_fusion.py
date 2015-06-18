@@ -23,6 +23,7 @@ from os.path import expanduser
 import tf
 import socket
 import math
+import select
 
 from std_msgs.msg import *
 
@@ -34,6 +35,7 @@ import numpy as np
 
 # setup publishing pose messages
 pose_pub = rospy.Publisher('fusedPose', PoseStamped, queue_size=10)
+odom_offset_pub = rospy.Publisher('odomOffset', PoseStamped, queue_size=10)
 rospy.init_node("localisationFuser", anonymous=False) # name the script on the ROS network
 
 odom_offset_x = odom_offset_y = odom_offset_th = 0	# variables to track the offset between VICON localisation and raw odometry localisation
@@ -47,7 +49,7 @@ vicon_y_prev_list = [0,0,0,0,0]
 vicon_reliability_history = [False] * 20
 
 vicon_only = False
-
+odom_offset_calcd = False
 
 vicon_noise_floor = 0.1
 
@@ -71,6 +73,32 @@ def publish_current_pose(x, y, th):
 	msg.pose.orientation.w = q[3]
 
 	pose_pub.publish(msg)
+
+def publish_offset_odom():
+	global odom_offset_x, odom_offset_y, odom_offset_th, odom_offset_calcd
+
+
+	if(odom_offset_calcd == True):
+		odom_x = loc.odom_x + odom_offset_x
+		odom_y = loc.odom_y + odom_offset_y
+		odom_th = loc.odom_th + odom_offset_th
+
+		#create pose message
+		msg = PoseStamped()
+
+		msg.header.stamp = rospy.Time.now()
+		msg.header.frame_id = 'world'
+
+		q = tf.transformations.quaternion_from_euler(0, 0, odom_th)
+
+		msg.pose.position = Point(odom_x,odom_y,0)
+
+		msg.pose.orientation.x = q[0]
+		msg.pose.orientation.y = q[1]
+		msg.pose.orientation.z = q[2]
+		msg.pose.orientation.w = q[3]
+
+		odom_offset_pub.publish(msg)
 
 def vicon_is_reliable(vicon_x, vicon_y, vicon_th):
 	#global vicon_x_prev, vicon_y_prev, vicon_th_prev, vicon_x_prev2, vicon_y_prev2
@@ -119,7 +147,7 @@ def vicon_is_reliable(vicon_x, vicon_y, vicon_th):
 	return vicon_is_good
 
 def localisation_fusion():
-	global odom_offset_x, odom_offset_y, odom_offset_th
+	global odom_offset_x, odom_offset_y, odom_offset_th, odom_offset_calcd
 	global vicon_reliability_history, vicon_only
 	# let's make our variables easier to address
 	vicon_x = loc.vicon_x
@@ -141,12 +169,13 @@ def localisation_fusion():
 		fused_y = vicon_y
 		fused_th = vicon_th
 
-		if(vicon_reliability_history.count(True) == len(vicon_reliability_history)):
+		if(vicon_reliability_history.count(True) == len(vicon_reliability_history) and odom_offset_calcd == False):
 			# And we'll update the odometry offsets in case VICON stops working soon
 			odom_offset_x = vicon_x - odom_x
 			odom_offset_y = vicon_y - odom_y
 			odom_offset_th = vicon_th - odom_th
 			print("Syncing odom to Vicon. New odom = (%.3f, %.3f, %.3f)") % (odom_x + odom_offset_x, odom_y + odom_offset_y, odom_th + odom_offset_th)
+			odom_offset_calcd = True
 
 		#print("Vicon is reliable, using Vicon data...")
 	else:
@@ -167,7 +196,7 @@ def localisation_fusion():
 
 	return(fused_x, fused_y, fused_th)
 
-def main():
+def main(argv):
 	global vicon_only
 
 	loc.init() # subscrive to VICON and Odometry messages
@@ -180,17 +209,21 @@ def main():
 		print("Odometry data will be used too")
 	
 	rate = rospy.Rate(10)
+
+	key_pressed = False
 	
-	while not rospy.is_shutdown():
+	while key_pressed == False:
 
 		(x, y, th) = localisation_fusion()
 
 		publish_current_pose(x, y, th)
 
+		publish_offset_odom()
+		key_pressed = select.select([sys.stdin], [], [], 0) == ([sys.stdin], [], []) # is key pressed?
 		rate.sleep()
 	
 if __name__=='__main__':
 	try:
-		main()
+		main(sys.argv[1:])
 	except rospy.ROSInterruptException:
 		pass

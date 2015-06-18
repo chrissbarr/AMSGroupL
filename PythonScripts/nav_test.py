@@ -36,7 +36,7 @@ def main(argv):
 	key_pressed = False
 	
 	waypoint_index = 0
-	waypoint_list = [[5.5,0.8],[5.5,2],[3,0.8]]
+	waypoint_list = [[3.5,0.8],[3.5,1.8],[2,0.8]]
 
 	num_waypoints = len(waypoint_list)
 	exit = False

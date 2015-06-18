@@ -79,7 +79,7 @@ screen -dmS personality_screen
 screen -S personality_screen -p 0 -X stuff "python /home/odroid/python_scripts/personality_background.py $ENTER"
 
 screen -dmS object_avoidance_screen
-screen -S object_avoidance_screen -p 0 -X stuff "python /home/odroid/python_scripts/object_avoidance_background.py $ENTER"
+screen -S object_avoidance_screen -p 0 -X stuff "python /home/odroid/python_scripts/object_avoidance_background.py T $ENTER"
 
 screen -dmS nav_pilot_screen
 screen -S nav_pilot_screen -p 0 -X stuff "python /home/odroid/python_scripts/nav_pilot.py F $ENTER"

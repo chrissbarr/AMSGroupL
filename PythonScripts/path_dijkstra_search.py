@@ -221,7 +221,7 @@ def rosmap_to_map(rosmap):
 				# if the navigation system has reached the coordinate
 				if(nav.nav_status == nav.NAV_STATUS_COORDS_REACHED):
 					print("Waypoint %d has been reached.") % waypoint_index
-					time.sleep(2)
+					time.sleep(1)
 					if(waypoint_index <= num_waypoints):
 						waypoint_index += 1
 					else:

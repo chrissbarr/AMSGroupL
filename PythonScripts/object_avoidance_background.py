@@ -56,7 +56,7 @@ m_d = 0
 m_l = 0
 m_r = 0
 
-avoid_obstacles = True #if false, script acts as direct pass-through for motor commands
+avoid_obstacles = False #if false, script acts as direct pass-through for motor commands
 
 ir_sensor1 = 0
 ir_sensor2 = 0
@@ -166,8 +166,8 @@ def obstacle_too_close_side():
     else:
         return 0
 
-def main():
-    global m_d, m_r, m_l, default_turn_direc, default_turn_speed
+def main(argv):
+    global m_d, m_r, m_l, default_turn_direc, default_turn_speed, avoid_obstacles
     (ros_update_1, ros_update_2, ros_update_3) = subscriber() # subscribe to ROS topics
     time.sleep(1) # give sufficient time to start getting data
 
@@ -175,6 +175,13 @@ def main():
     loc.init()
     
     key_pressed = False
+
+    if(sys.argv[1] == 'T'):
+        avoid_obstacles = True
+        print("Avoiding Obstacles")
+    else:
+        avoid_obstacles = False
+        print("Direct Passthrough")
 	
     while key_pressed == False:
         
@@ -233,6 +240,6 @@ def main():
 
 if __name__ == '__main__':
     try:
-    	main()        
+    	main(sys.argv[1:])        
     except rospy.ROSInterruptException: # if a problem occurs
         pass
